@@ -1,22 +1,18 @@
 from flask import Flask, render_template, request, jsonify
 import json
 import os
+import re
 import requests
 import datetime
 from dotenv import load_dotenv
 
-# .env 파일에서 인증키 불러오기
 load_dotenv()
 
 app = Flask(__name__)
 
-# NEIS 인증키
 SERVICE_KEY = os.getenv("EDU_API_KEY")
-
-# NEIS 기본 주소
 BASE_URL = "https://open.neis.go.kr/hub/"
 
-# 로컬 JSON 데이터 불러오기
 with open("data/teachers.json", "r", encoding="utf-8") as f:
     teachers = json.load(f)
 
@@ -26,7 +22,6 @@ with open("data/facilities.json", "r", encoding="utf-8") as f:
 search_data = teachers + facilities
 
 
-# 검색용 문자열 합치기
 def build_blob(item):
     fields = [item.get("title", ""), item.get("desc", "")]
     fields += item.get("keywords", [])
@@ -34,7 +29,6 @@ def build_blob(item):
     return " ".join(fields).lower()
 
 
-# 검색 정확도 보강
 def is_match(query, item):
     blob = build_blob(item)
     query = query.lower().strip()
@@ -42,11 +36,9 @@ def is_match(query, item):
     if not query:
         return False
 
-    # 전체 문장 포함
     if query in blob:
         return True
 
-    # 띄어쓰기 단위로 전부 포함
     query_tokens = query.split()
     if all(token in blob for token in query_tokens):
         return True
@@ -54,14 +46,12 @@ def is_match(query, item):
     return False
 
 
-# 급식 문자열 정리
 def clean_menu_list(raw_menu):
     menu_list = []
 
     for item in raw_menu.split("<br/>"):
         cleaned = item.replace("#", "").strip()
 
-        # 뒤의 알레르기 숫자 제거
         while cleaned and (cleaned[-1].isdigit() or cleaned[-1] == "."):
             cleaned = cleaned[:-1].strip()
 
@@ -71,7 +61,6 @@ def clean_menu_list(raw_menu):
     return menu_list
 
 
-# 학교 코드 찾기
 def get_school_info(school_name, office_education):
     params = {
         "KEY": SERVICE_KEY,
@@ -97,7 +86,6 @@ def get_school_info(school_name, office_education):
     return None
 
 
-# 하루 급식 가져오기
 def get_menus_by_day(school_name, office_education, day):
     school_info = get_school_info(school_name, office_education)
     if not school_info:
@@ -121,24 +109,15 @@ def get_menus_by_day(school_name, office_education, day):
     return clean_menu_list(raw_menu)
 
 
-# 이번주/다음주 월~금 날짜 구하기
 def get_week_dates(offset_weeks=0):
     today = datetime.date.today()
     monday = today - datetime.timedelta(days=today.weekday()) + datetime.timedelta(weeks=offset_weeks)
-
-    days = []
-    for i in range(5):  # 월~금
-        current_day = monday + datetime.timedelta(days=i)
-        days.append(current_day)
-
-    return days
+    return [monday + datetime.timedelta(days=i) for i in range(5)]
 
 
-# 이번주/다음주 급식 가져오기
 def get_week_meals(school_name, office_education, offset_weeks=0):
     week_days = get_week_dates(offset_weeks)
     result = []
-
     weekday_names = ["월", "화", "수", "목", "금", "토", "일"]
 
     for day in week_days:
@@ -154,9 +133,214 @@ def get_week_meals(school_name, office_education, offset_weeks=0):
     return result
 
 
+# -------------------------
+# 시간표 관련
+# -------------------------
+
+def extract_grade_class(query):
+    patterns = [
+        r"(\d)\s*학년\s*(\d+)\s*반\s*시간표",
+        r"(\d)\s*학년\s*(\d+)\s*반",
+        r"(\d)\s*-\s*(\d+)\s*시간표",
+        r"(\d)\s*-\s*(\d+)"
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, query)
+        if match:
+            return match.group(1), match.group(2)
+
+    return None, None
+
+
+def parse_student_id(student_id):
+    """
+    학번을 학년/반/번호로 해석
+    지원 형식:
+    - 4자리: 3618 -> 3학년 6반 18번
+    - 5자리: 30618 -> 3학년 6반 18번
+    """
+    student_id = re.sub(r"\D", "", student_id)
+
+    if len(student_id) == 4:
+        grade = student_id[0]
+        class_nm = student_id[1]
+        number = student_id[2:]
+        return grade, class_nm, number
+
+    if len(student_id) == 5:
+        grade = student_id[0]
+        class_nm = str(int(student_id[1:3]))  # 06 -> 6
+        number = student_id[3:]
+        return grade, class_nm, number
+
+    return None, None, None
+
+
+def get_current_semester():
+    month = datetime.date.today().month
+    return "1" if month <= 7 else "2"
+
+
+def fetch_timetable_day(school_info, ay, sem, grade, class_nm, ymd):
+    params = {
+        "KEY": SERVICE_KEY,
+        "Type": "json",
+        "pIndex": 1,
+        "pSize": 100,
+        "ATPT_OFCDC_SC_CODE": school_info["ATPT_OFCDC_SC_CODE"],
+        "SD_SCHUL_CODE": school_info["SD_SCHUL_CODE"],
+        "AY": ay,
+        "SEM": sem,
+        "GRADE": str(grade),
+        "CLASS_NM": str(class_nm),
+        "ALL_TI_YMD": ymd
+    }
+
+    response = requests.get(BASE_URL + "hisTimetable", params=params, timeout=15)
+    data = response.json()
+
+    if "hisTimetable" not in data:
+        return []
+
+    return data["hisTimetable"][1]["row"]
+
+
+def pick_first(row, keys, default=""):
+    for key in keys:
+        if key in row and row[key] not in (None, ""):
+            return row[key]
+    return default
+
+
+def normalize_timetable_rows(rows):
+    normalized = []
+
+    for row in rows:
+        ymd = pick_first(row, ["ALL_TI_YMD", "TI_FROM_YMD", "DATE"], "")
+        period = pick_first(row, ["PERIO", "TIME", "PERIOD"], "")
+        subject = pick_first(row, ["ITRT_CNTNT", "SUBJECT", "SBTR_DD_SC_NM"], "")
+        room = pick_first(row, ["CLRM_NM", "ROOM", "CLASSROOM"], "")
+
+        normalized.append({
+            "date": str(ymd),
+            "period": str(period),
+            "subject": str(subject),
+            "room": str(room)
+        })
+
+    return normalized
+
+
+def weekday_kor(yyyymmdd):
+    d = datetime.datetime.strptime(yyyymmdd, "%Y%m%d").date()
+    return ["월", "화", "수", "목", "금", "토", "일"][d.weekday()]
+
+
+def build_week_timetable_table(grade, class_nm):
+    school_info = get_school_info("광명고등학교", "경기도교육청")
+    if not school_info:
+        return None
+
+    ay = str(datetime.date.today().year)
+    sem = get_current_semester()
+
+    week_days = get_week_dates(0)
+    all_rows = []
+
+    for day in week_days:
+        ymd = day.strftime("%Y%m%d")
+        rows = fetch_timetable_day(school_info, ay, sem, grade, class_nm, ymd)
+        rows = normalize_timetable_rows(rows)
+
+        for row in rows:
+            all_rows.append({
+                "요일": weekday_kor(row["date"]) if row["date"] else "",
+                "교시": row["period"],
+                "표시": f"{row['subject']} ({row['room']})" if row["room"] else row["subject"]
+            })
+
+    if not all_rows:
+        return None
+
+    weekdays = ["월", "화", "수", "목", "금"]
+
+    periods = sorted(
+        list({r["교시"] for r in all_rows}),
+        key=lambda x: int(re.search(r"\d+", x).group()) if re.search(r"\d+", x) else 999
+    )
+
+    table = []
+    for period in periods:
+        row_data = {"교시": period}
+        for wd in weekdays:
+            row_data[wd] = ""
+
+        for row in all_rows:
+            if row["교시"] == period and row["요일"] in weekdays:
+                row_data[row["요일"]] = row["표시"]
+
+        table.append(row_data)
+
+    return table
+
+
 @app.route("/")
 def home():
     return render_template("index.html")
+
+
+@app.route("/timetable")
+def timetable_page():
+    return render_template("timetable.html")
+
+
+@app.route("/api/login-student", methods=["POST"])
+def login_student():
+    data = request.get_json()
+    student_id = data.get("student_id", "")
+
+    grade, class_nm, number = parse_student_id(student_id)
+
+    if not grade or not class_nm:
+        return jsonify({
+            "success": False,
+            "message": "학번 형식을 확인해주세요."
+        }), 400
+
+    return jsonify({
+        "success": True,
+        "grade": grade,
+        "class_nm": class_nm,
+        "number": number,
+        "redirect_url": f"/timetable?grade={grade}&class={class_nm}&student={student_id}"
+    })
+
+
+@app.route("/api/timetable")
+def timetable_api():
+    grade = request.args.get("grade", "").strip()
+    class_nm = request.args.get("class", "").strip()
+
+    if not grade or not class_nm:
+        return jsonify({
+            "success": False,
+            "message": "학년과 반 정보가 필요합니다."
+        }), 400
+
+    table = build_week_timetable_table(grade, class_nm)
+
+    if not table:
+        return jsonify({
+            "success": False,
+            "message": "시간표 정보를 불러오지 못했습니다."
+        }), 404
+
+    return jsonify({
+        "success": True,
+        "title": f"{grade}학년 {class_nm}반 이번 주 시간표",
+        "table": table
+    })
 
 
 @app.route("/api/search")
@@ -216,6 +400,16 @@ def search():
 
         return jsonify(results)
 
+    # 검색으로 시간표
+    grade, class_nm = extract_grade_class(query)
+    if grade and class_nm and "시간표" in query:
+        return jsonify([{
+            "type": "시간표 정보",
+            "title": f"{grade}학년 {class_nm}반 시간표",
+            "desc": "시간표 페이지로 이동합니다.",
+            "link": f"/timetable?grade={grade}&class={class_nm}"
+        }])
+
     # 일반 검색
     results = []
     for item in search_data:
@@ -238,13 +432,15 @@ def suggest():
         for keyword in item.get("keywords", []):
             keywords.add(keyword)
 
-    # 급식 추천어 추가
     keywords.add("오늘 급식")
     keywords.add("급식")
     keywords.add("이번주 급식")
     keywords.add("이번 주 급식")
     keywords.add("다음주 급식")
     keywords.add("다음 주 급식")
+    keywords.add("1학년 1반 시간표")
+    keywords.add("2학년 1반 시간표")
+    keywords.add("3학년 1반 시간표")
 
     query_tokens = query.split()
 
