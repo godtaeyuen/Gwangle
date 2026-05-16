@@ -8,43 +8,95 @@
 </head>
 <body>
   <div class="page">
-    <div class="topbar">광명고 학교 검색엔진</div>
+    <header class="topbar">
+      <div class="topbar-right">
+        <input
+          type="text"
+          id="studentIdInput"
+          class="student-id-input"
+          placeholder="학번 입력"
+        >
+        <button class="top-btn" onclick="loginWithStudentId()">내 시간표</button>
+        <button class="top-btn">로그인</button>
+        <button class="top-btn">회원가입</button>
+      </div>
+    </header>
 
     <main class="main">
-      <h1 class="logo">
-        <span class="blue">G</span><span class="red">w</span><span class="yellow">a</span><span class="green">n</span><span class="blue">g</span><span class="red">l</span><span class="green">e</span>
+      <h1 class="logo-text">
+        <span class="logo-blue">G</span><span class="logo-red">w</span><span class="logo-yellow">a</span><span class="logo-blue">n</span><span class="logo-green">g</span><span class="logo-red">l</span><span class="logo-yellow">e</span>
       </h1>
 
       <div class="search-wrap">
-        <div class="search-box">
-          <span class="search-icon">⌕</span>
-          <input
-            type="text"
-            id="searchInput"
-            placeholder="광명고 정보를 검색해보세요"
-            autocomplete="off"
-          />
+        <div class="search-row">
+          <div class="search-box">
+            <span class="search-icon">⌕</span>
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="광글 검색 또는 학교 정보 입력"
+              autocomplete="off"
+            />
+          </div>
+
+          <button class="action-btn primary-btn" onclick="searchData()">광글 검색</button>
+          <button class="action-btn" onclick="resetSearch()">초기화</button>
         </div>
+
         <div id="autocompleteBox" class="autocomplete-box"></div>
       </div>
 
-      <div class="buttons">
-        <button onclick="searchData()">광글 검색</button>
-        <button onclick="resetSearch()">초기화</button>
-      </div>
+      <section class="shortcut-section">
+        <div class="shortcut-grid">
+          <a href="#" class="shortcut-item" onclick="event.preventDefault(); searchFavorite('오늘 급식');">
+            <div class="shortcut-circle">🍽</div>
+            <div class="shortcut-label">오늘 급식</div>
+          </a>
+
+          <a href="#" class="shortcut-item" onclick="event.preventDefault(); searchFavorite('이번주 급식');">
+            <div class="shortcut-circle">📅</div>
+            <div class="shortcut-label">이번주 급식</div>
+          </a>
+
+          <a href="/timetable" class="shortcut-item">
+            <div class="shortcut-circle">📘</div>
+            <div class="shortcut-label">시간표</div>
+          </a>
+
+          <a href="#" class="shortcut-item" onclick="event.preventDefault(); searchFavorite('선생님');">
+            <div class="shortcut-circle">👩‍🏫</div>
+            <div class="shortcut-label">선생님 찾기</div>
+          </a>
+
+          <a href="#" class="shortcut-item" onclick="event.preventDefault(); searchFavorite('학생부');">
+            <div class="shortcut-circle">🏫</div>
+            <div class="shortcut-label">학생부</div>
+          </a>
+
+          <a href="#" class="shortcut-item" onclick="event.preventDefault(); searchFavorite('보건실');">
+            <div class="shortcut-circle">🩺</div>
+            <div class="shortcut-label">보건실</div>
+          </a>
+        </div>
+      </section>
 
       <section id="resultsArea" class="results-area">
         <div class="results-header">
           <h2>검색 결과</h2>
-          <button class="reset-btn" onclick="resetSearch()">검색 초기화</button>
+          <button class="reset-btn" onclick="resetSearch()">초기화</button>
         </div>
         <div id="results"></div>
       </section>
     </main>
-
-    <footer class="footer">Gwangle Prototype</footer>
   </div>
 
   <script src="{{ url_for('static', filename='main.js') }}"></script>
+  <script>
+    function searchFavorite(keyword) {
+      const input = document.getElementById("searchInput");
+      input.value = keyword;
+      searchData();
+    }
+  </script>
 </body>
 </html>

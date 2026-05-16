@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>시간표</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <button class="top-btn" onclick="location.href='/'">메인으로</button>
+    </div>
+
+    <main class="main timetable-page">
+      <h1 class="page-title" id="pageTitle">시간표 불러오는 중...</h1>
+      <div id="timetableContainer"></div>
+    </main>
+  </div>
+
+  <script>
+    function getQueryParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    function renderTable(tableData) {
+      const headers = ["교시", "월", "화", "수", "목", "금"];
+
+      return `
+        <div class="timetable-wrap">
+          <table class="timetable-table">
+            <thead>
+              <tr>
+                ${headers.map(h => `<th>${h}</th>`).join("")}
+              </tr>
+            </thead>
+            <tbody>
+              ${tableData.map(row => `
+                <tr>
+                  ${headers.map(h => `<td>${row[h] || ""}</td>`).join("")}
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    async function loadTimetable() {
+      const grade = getQueryParam("grade");
+      const classNm = getQueryParam("class");
+
+      const title = document.getElementById("pageTitle");
+      const container = document.getElementById("timetableContainer");
+
+      if (!grade || !classNm) {
+        title.textContent = "학년/반 정보가 없습니다.";
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/timetable?grade=${grade}&class=${classNm}`);
+        const data = await res.json();
+
+        if (!data.success) {
+          title.textContent = "시간표 정보를 불러오지 못했습니다.";
+          container.innerHTML = "";
+          return;
+        }
+
+        title.textContent = data.title;
+        container.innerHTML = renderTable(data.table);
+      } catch (error) {
+        console.error(error);
+        title.textContent = "시간표 정보를 불러오는 중 오류가 발생했습니다.";
+      }
+    }
+
+    loadTimetable();
+  </script>
+</body>
+</html>

@@ -6,6 +6,38 @@ const results = document.getElementById("results");
 let currentSuggestions = [];
 let activeIndex = -1;
 
+async function loginWithStudentId() {
+  const input = document.getElementById("studentIdInput");
+  const studentId = input.value.trim();
+
+  if (!studentId) {
+    alert("학번을 입력해주세요.");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/login-student", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ student_id: studentId })
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      alert(data.message || "학번을 확인해주세요.");
+      return;
+    }
+
+    location.href = data.redirect_url;
+  } catch (error) {
+    console.error(error);
+    alert("시간표 정보를 불러오는 중 오류가 발생했습니다.");
+  }
+}
+
 function searchData() {
   const query = searchInput.value.trim();
 
@@ -39,8 +71,10 @@ function renderResults(list) {
   results.innerHTML = list.map(item => `
     <div class="result-card">
       <div class="result-type">${item.type}</div>
-      <div class="result-title">${item.title}</div>
-      <div class="result-desc">${item.desc}</div>
+      <div class="result-title">
+        ${item.link ? `<a href="${item.link}">${item.title}</a>` : item.title}
+      </div>
+      <div class="result-desc">${item.desc || ""}</div>
       <div class="result-tags">
         ${(item.tags || []).map(tag => `<span class="tag">${tag}</span>`).join("")}
       </div>
@@ -134,15 +168,14 @@ searchInput.addEventListener("keydown", (e) => {
       searchData();
       return;
     }
-
-    if (e.key === "Escape") {
-      hideSuggestions();
-      return;
-    }
   }
 
   if (e.key === "Enter") {
     searchData();
+  }
+
+  if (e.key === "Escape") {
+    hideSuggestions();
   }
 });
 
