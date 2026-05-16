@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>광글</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">광명고 학교 검색엔진</div>
+
+    <main class="main">
+      <h1 class="logo">
+        <span class="blue">G</span><span class="red">w</span><span class="yellow">a</span><span class="green">n</span><span class="blue">g</span><span class="red">l</span><span class="green">e</span>
+      </h1>
+
+      <div class="search-wrap">
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="광명고 정보를 검색해보세요"
+            autocomplete="off"
+          />
+        </div>
+        <div id="autocompleteBox" class="autocomplete-box"></div>
+      </div>
+
+      <div class="buttons">
+        <button onclick="searchData()">광글 검색</button>
+        <button onclick="resetSearch()">초기화</button>
+      </div>
+
+      <section id="resultsArea" class="results-area">
+        <div class="results-header">
+          <h2>검색 결과</h2>
+          <button class="reset-btn" onclick="resetSearch()">검색 초기화</button>
+        </div>
+        <div id="results"></div>
+      </section>
+    </main>
+
+    <footer class="footer">Gwangle Prototype</footer>
+  </div>
+
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
