@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>로그인 - 광글</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="topbar-right">
+        <button class="top-btn" onclick="location.href='/'">메인으로</button>
+      </div>
+    </header>
+
+    <main class="main auth-main">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="flash-wrap auth-flash-wrap">
+            {% for message in messages %}
+              <div class="flash-message">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <h1 class="logo-text auth-logo">
+        <span class="logo-blue">G</span><span class="logo-red">w</span><span class="logo-yellow">a</span><span class="logo-blue">n</span><span class="logo-green">g</span><span class="logo-red">l</span><span class="logo-yellow">e</span>
+      </h1>
+
+      <div class="auth-card">
+        <h2 class="auth-title">로그인</h2>
+        <p class="auth-desc">아이디와 비밀번호를 입력해주세요.</p>
+
+        <form class="auth-form" method="POST" action="/login">
+          <input type="text" class="auth-input" name="username" placeholder="아이디">
+          <input type="password" class="auth-input" name="password" placeholder="비밀번호">
+
+          <button type="submit" class="auth-submit-btn">로그인</button>
+        </form>
+
+        <div class="auth-footer-text">
+          계정이 없나요?
+          <a href="/signup">회원가입</a>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

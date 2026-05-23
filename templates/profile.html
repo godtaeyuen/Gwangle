@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>프로필 - 광글</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="topbar-right">
+        <button class="top-btn" onclick="location.href='/'">메인으로</button>
+        <button class="top-btn" onclick="location.href='/timetable'">내 시간표</button>
+        <button class="top-btn" onclick="location.href='/logout'">로그아웃</button>
+      </div>
+    </header>
+
+    <main class="main profile-main">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="flash-wrap profile-flash-wrap">
+            {% for message in messages %}
+              <div class="flash-message">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <section class="profile-hero">
+        <div>
+          <h1 class="page-title">내 프로필</h1>
+          <p class="page-desc">개인정보, 담임선생님, 비밀번호, 내신 기록을 관리합니다.</p>
+        </div>
+        <div class="profile-avatar">
+          {{ profile_user["student_name"][0] if profile_user["student_name"] else "G" }}
+        </div>
+      </section>
+
+      <section class="profile-grid">
+        <div class="profile-card profile-summary-card">
+          <h2 class="profile-card-title">기본 정보</h2>
+
+          <div class="profile-info-list">
+            <div class="profile-info-row">
+              <span>아이디</span>
+              <strong>{{ profile_user["username"] }}</strong>
+            </div>
+
+            <div class="profile-info-row">
+              <span>이름</span>
+              <strong>{{ profile_user["student_name"] }}</strong>
+            </div>
+
+            <div class="profile-info-row">
+              <span>학번</span>
+              <strong>{{ profile_user["student_id"] }}</strong>
+            </div>
+
+            <div class="profile-info-row">
+              <span>학년 / 반 / 번호</span>
+              <strong>
+                {% if grade and class_nm %}
+                  {{ grade }}학년 {{ class_nm }}반
+                  {% if number %} {{ number }}번{% endif %}
+                {% else %}
+                  해석 불가
+                {% endif %}
+              </strong>
+            </div>
+
+            <div class="profile-info-row">
+              <span>담임선생님</span>
+              <strong>{{ profile_user["homeroom_teacher_name"] or "미등록" }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-card">
+          <h2 class="profile-card-title">개인정보 수정</h2>
+          <p class="profile-card-desc">이름, 학번, 담임선생님을 수정할 수 있습니다.</p>
+
+          <form class="profile-form" method="POST" action="/profile">
+            <input type="hidden" name="action" value="update_profile">
+
+            <label class="profile-label">이름</label>
+            <input
+              type="text"
+              class="auth-input"
+              name="studentName"
+              value="{{ profile_user['student_name'] }}"
+              placeholder="이름"
+            >
+
+            <label class="profile-label">학번</label>
+            <input
+              type="text"
+              class="auth-input"
+              name="studentId"
+              value="{{ profile_user['student_id'] }}"
+              placeholder="예: 2101 또는 20101"
+            >
+
+            <label class="profile-label">담임선생님</label>
+            <select class="auth-input" name="homeroomTeacherId">
+              {% for teacher in teachers %}
+                <option
+                  value="{{ teacher['id'] }}"
+                  {% if teacher['id'] == profile_user['homeroom_teacher_id'] %}selected{% endif %}
+                >
+                  {{ teacher["title"] }} / {{ teacher["desc"] }}
+                </option>
+              {% endfor %}
+            </select>
+
+            <button type="submit" class="auth-submit-btn">개인정보 저장</button>
+          </form>
+        </div>
+
+        <div class="profile-card">
+          <h2 class="profile-card-title">비밀번호 변경</h2>
+          <p class="profile-card-desc">현재 비밀번호 확인 후 새 비밀번호로 변경합니다.</p>
+
+          <form class="profile-form" method="POST" action="/profile">
+            <input type="hidden" name="action" value="change_password">
+
+            <label class="profile-label">현재 비밀번호</label>
+            <input
+              type="password"
+              class="auth-input"
+              name="currentPassword"
+              placeholder="현재 비밀번호"
+            >
+
+            <label class="profile-label">새 비밀번호</label>
+            <input
+              type="password"
+              class="auth-input"
+              name="newPassword"
+              placeholder="새 비밀번호"
+            >
+
+            <label class="profile-label">새 비밀번호 확인</label>
+            <input
+              type="password"
+              class="auth-input"
+              name="newPasswordConfirm"
+              placeholder="새 비밀번호 확인"
+            >
+
+            <button type="submit" class="auth-submit-btn">비밀번호 변경</button>
+          </form>
+        </div>
+
+        <div class="profile-card profile-grade-card">
+          <h2 class="profile-card-title">내신 기록</h2>
+          <p class="profile-card-desc">간단한 내신 기록을 직접 추가하고 관리할 수 있습니다.</p>
+
+          <form class="profile-form grade-form" method="POST" action="/profile">
+            <input type="hidden" name="action" value="add_grade">
+
+            <div class="grade-form-grid">
+              <input
+                type="text"
+                class="auth-input"
+                name="semester"
+                placeholder="학기 예: 1학년 1학기"
+              >
+
+              <input
+                type="text"
+                class="auth-input"
+                name="subject"
+                placeholder="과목명"
+              >
+
+              <input
+                type="text"
+                class="auth-input"
+                name="score"
+                placeholder="점수 예: 92"
+              >
+
+              <input
+                type="text"
+                class="auth-input"
+                name="gradeLevel"
+                placeholder="등급 예: 2등급"
+              >
+            </div>
+
+            <input
+              type="text"
+              class="auth-input"
+              name="note"
+              placeholder="메모 예: 수행평가 보완 필요"
+            >
+
+            <button type="submit" class="auth-submit-btn">내신 기록 추가</button>
+          </form>
+
+          <div class="grade-records">
+            {% if grade_records %}
+              {% for record in grade_records %}
+                <div class="grade-record-card">
+                  <div class="grade-record-main">
+                    <strong>{{ record["subject"] }}</strong>
+                    <span>{{ record["semester"] }}</span>
+                  </div>
+
+                  <div class="grade-record-sub">
+                    점수: {{ record["score"] or "-" }} /
+                    등급: {{ record["grade_level"] or "-" }}
+                  </div>
+
+                  {% if record["note"] %}
+                    <div class="grade-record-note">{{ record["note"] }}</div>
+                  {% endif %}
+
+                  <form method="POST" action="/profile" class="delete-grade-form">
+                    <input type="hidden" name="action" value="delete_grade">
+                    <input type="hidden" name="gradeRecordId" value="{{ record['id'] }}">
+                    <button type="submit" class="small-danger-btn">삭제</button>
+                  </form>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="empty-message">아직 등록된 내신 기록이 없습니다.</div>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

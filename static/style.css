@@ -58,6 +58,17 @@ body {
   color: #9aa0a6;
 }
 
+.user-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 12px;
+  background: #f1f3f4;
+  border-radius: 18px;
+  font-size: 13px;
+  color: #3c4043;
+}
+
 .main {
   max-width: 900px;
   margin: 0 auto;
@@ -65,6 +76,12 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.subpage-main {
+  align-items: stretch;
+  max-width: 1100px;
+  padding: 20px;
 }
 
 .logo-text {
@@ -90,6 +107,24 @@ body {
 
 .logo-green {
   color: #34a853;
+}
+
+.flash-wrap {
+  width: 100%;
+  max-width: 760px;
+  margin-bottom: 12px;
+}
+
+.flash-message {
+  background: #e8f0fe;
+  color: #174ea6;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 14px;
+}
+
+.auth-flash-wrap {
+  max-width: 420px;
 }
 
 .search-wrap {
@@ -342,8 +377,24 @@ body {
 
 .page-title {
   font-size: 30px;
-  margin-bottom: 24px;
+  margin: 10px 0 10px 0;
   color: #202124;
+}
+
+.page-desc {
+  font-size: 14px;
+  color: #5f6368;
+  margin: 0 0 20px 0;
+}
+
+.meal-container,
+.teacher-list-wrap {
+  width: 100%;
+}
+
+.meal-card,
+.teacher-card {
+  background: #ffffff;
 }
 
 .timetable-page {
@@ -379,6 +430,363 @@ body {
   font-weight: 600;
 }
 
+/* 로그인 / 회원가입 */
+.auth-main {
+  justify-content: center;
+  padding-top: 30px;
+}
+
+.auth-logo {
+  font-size: 72px;
+  margin-bottom: 20px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid #dadce0;
+  border-radius: 24px;
+  padding: 32px 28px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(60, 64, 67, 0.08);
+}
+
+.step-badge {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #f1f3f4;
+  color: #5f6368;
+  font-size: 12px;
+}
+
+.auth-title {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  color: #202124;
+  text-align: center;
+}
+
+.auth-desc {
+  margin: 0 0 24px 0;
+  font-size: 14px;
+  color: #5f6368;
+  text-align: center;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-input {
+  width: 100%;
+  height: 48px;
+  border: 1px solid #dadce0;
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 14px;
+  outline: none;
+  background: #ffffff;
+}
+
+.auth-input:focus {
+  border-color: #4285f4;
+}
+
+.auth-submit-btn {
+  height: 44px;
+  border: none;
+  border-radius: 22px;
+  background: #1a73e8;
+  color: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.auth-submit-btn:hover {
+  background: #1765cc;
+}
+
+.auth-footer-text {
+  margin-top: 18px;
+  font-size: 14px;
+  color: #5f6368;
+  text-align: center;
+}
+
+.auth-footer-text a {
+  color: #1a73e8;
+  text-decoration: none;
+}
+
+.auth-footer-text a:hover {
+  text-decoration: underline;
+}
+
+/* 챗봇 */
+.chatbot-main {
+  max-width: 900px;
+  align-items: stretch;
+  padding: 20px;
+}
+
+.chatbot-card {
+  width: 100%;
+  border: 1px solid #dadce0;
+  border-radius: 20px;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(60, 64, 67, 0.08);
+}
+
+.chat-messages {
+  height: 520px;
+  overflow-y: auto;
+  padding: 18px;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-message {
+  max-width: 75%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  line-height: 1.5;
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+.chat-message.user {
+  align-self: flex-end;
+  background: #d2e3fc;
+  color: #174ea6;
+}
+
+.chat-message.bot {
+  align-self: flex-start;
+  background: #f1f3f4;
+  color: #202124;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 10px;
+  padding: 14px;
+  border-top: 1px solid #eceff1;
+  background: #ffffff;
+}
+
+.chat-input {
+  flex: 1;
+  height: 46px;
+  border: 1px solid #dadce0;
+  border-radius: 23px;
+  padding: 0 16px;
+  font-size: 14px;
+  outline: none;
+}
+
+.chat-send-btn {
+  height: 46px;
+  border: none;
+  border-radius: 23px;
+  background: #1a73e8;
+  color: #ffffff;
+  padding: 0 18px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.chat-send-btn:hover {
+  background: #1765cc;
+}
+
+.chat-send-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 프로필 */
+.profile-main {
+  max-width: 1100px;
+  align-items: stretch;
+  padding: 20px;
+}
+
+.profile-flash-wrap {
+  max-width: 1100px;
+}
+
+.profile-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.profile-avatar {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #e8f0fe;
+  color: #1a73e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.profile-card {
+  border: 1px solid #dadce0;
+  border-radius: 22px;
+  padding: 24px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(60, 64, 67, 0.06);
+}
+
+.profile-summary-card {
+  background: #ffffff;
+}
+
+.profile-card-title {
+  margin: 0 0 8px 0;
+  font-size: 21px;
+  color: #202124;
+}
+
+.profile-card-desc {
+  margin: 0 0 18px 0;
+  font-size: 14px;
+  color: #5f6368;
+  line-height: 1.5;
+}
+
+.profile-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.profile-info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f3f4;
+  font-size: 14px;
+}
+
+.profile-info-row span {
+  color: #5f6368;
+}
+
+.profile-info-row strong {
+  color: #202124;
+  text-align: right;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-label {
+  font-size: 13px;
+  color: #5f6368;
+  margin-top: 4px;
+}
+
+.profile-grade-card {
+  grid-column: 1 / -1;
+}
+
+.grade-form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.grade-records {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.grade-record-card {
+  border: 1px solid #eceff1;
+  border-radius: 16px;
+  padding: 14px;
+  background: #fafafa;
+  position: relative;
+}
+
+.grade-record-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.grade-record-main strong {
+  font-size: 16px;
+  color: #202124;
+}
+
+.grade-record-main span {
+  font-size: 13px;
+  color: #5f6368;
+}
+
+.grade-record-sub {
+  font-size: 13px;
+  color: #3c4043;
+  margin-bottom: 8px;
+}
+
+.grade-record-note {
+  font-size: 13px;
+  color: #5f6368;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.delete-grade-form {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.small-danger-btn {
+  border: 1px solid #f4c7c3;
+  background: #fce8e6;
+  color: #c5221f;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.small-danger-btn:hover {
+  background: #fad2cf;
+}
+
 @media (max-width: 900px) {
   .logo-text {
     font-size: 72px;
@@ -405,6 +813,22 @@ body {
     flex-wrap: wrap;
     justify-content: center;
   }
+
+  .chat-message {
+    max-width: 88%;
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .grade-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grade-records {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
@@ -430,5 +854,43 @@ body {
 
   .shortcut-label {
     font-size: 12px;
+  }
+
+  .auth-card {
+    padding: 24px 18px;
+  }
+
+  .auth-logo {
+    font-size: 56px;
+  }
+
+  .chat-messages {
+    height: 440px;
+  }
+
+  .chat-input-row {
+    flex-direction: column;
+  }
+
+  .profile-hero {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+  }
+
+  .profile-card {
+    padding: 18px;
+  }
+
+  .grade-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-info-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .profile-info-row strong {
+    text-align: left;
   }
 }

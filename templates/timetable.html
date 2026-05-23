@@ -19,6 +19,9 @@
   </div>
 
   <script>
+    const initialGrade = "{{ grade or '' }}";
+    const initialClass = "{{ class_nm or '' }}";
+
     function getQueryParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(name);
@@ -48,24 +51,25 @@
     }
 
     async function loadTimetable() {
-      const grade = getQueryParam("grade");
-      const classNm = getQueryParam("class");
+      const grade = initialGrade || getQueryParam("grade");
+      const classNm = initialClass || getQueryParam("class");
 
       const title = document.getElementById("pageTitle");
       const container = document.getElementById("timetableContainer");
 
       if (!grade || !classNm) {
-        title.textContent = "학년/반 정보가 없습니다.";
+        title.textContent = "시간표 정보를 찾을 수 없습니다.";
+        container.innerHTML = `<div class="empty-message">로그인 후 이용하거나, 검색에서 학년/반을 지정해주세요.</div>`;
         return;
       }
 
       try {
-        const res = await fetch(`/api/timetable?grade=${grade}&class=${classNm}`);
+        const res = await fetch(`/api/timetable?grade=${encodeURIComponent(grade)}&class=${encodeURIComponent(classNm)}`);
         const data = await res.json();
 
-        if (!data.success) {
+        if (!res.ok || !data.success) {
           title.textContent = "시간표 정보를 불러오지 못했습니다.";
-          container.innerHTML = "";
+          container.innerHTML = `<div class="empty-message">${data.message || "데이터가 없습니다."}</div>`;
           return;
         }
 
@@ -74,6 +78,7 @@
       } catch (error) {
         console.error(error);
         title.textContent = "시간표 정보를 불러오는 중 오류가 발생했습니다.";
+        container.innerHTML = `<div class="empty-message">다시 시도해주세요.</div>`;
       }
     }
 

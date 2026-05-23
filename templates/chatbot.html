@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학교 정보 챗봇</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="topbar-right">
+        <button class="top-btn" onclick="location.href='/'">메인으로</button>
+      </div>
+    </header>
+
+    <main class="main chatbot-main">
+      <h1 class="page-title">학교 정보 챗봇</h1>
+      <p class="page-desc">급식, 시간표, 선생님/시설 정보, 학사일정까지 함께 답변합니다.</p>
+
+      <div class="chatbot-card">
+        <div id="chatMessages" class="chat-messages">
+          <div class="chat-message bot">
+            안녕! 광명고 관련 질문을 해줘.
+            예: 오늘 급식, 내 시간표, 9월 일정, 추석 언제야, 보건실 위치
+          </div>
+        </div>
+
+        <div class="chat-input-row">
+          <input
+            type="text"
+            id="chatInput"
+            class="chat-input"
+            placeholder="예: 9월 일정 알려줘"
+          >
+          <button id="sendChatBtn" class="chat-send-btn">전송</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const chatMessages = document.getElementById("chatMessages");
+    const chatInput = document.getElementById("chatInput");
+    const sendChatBtn = document.getElementById("sendChatBtn");
+
+    function addMessage(text, sender) {
+      const div = document.createElement("div");
+      div.className = `chat-message ${sender}`;
+      div.textContent = text;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const message = chatInput.value.trim();
+      if (!message) return;
+
+      addMessage(message, "user");
+      chatInput.value = "";
+      sendChatBtn.disabled = true;
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await res.json();
+        addMessage(data.reply || "응답을 가져오지 못했어.", "bot");
+      } catch (error) {
+        console.error(error);
+        addMessage("챗봇 응답 중 오류가 발생했어.", "bot");
+      } finally {
+        sendChatBtn.disabled = false;
+        chatInput.focus();
+      }
+    }
+
+    sendChatBtn.addEventListener("click", sendMessage);
+
+    chatInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>

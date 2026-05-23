@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>선생님 목록</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="topbar-right">
+        <button class="top-btn" onclick="location.href='/'">메인으로</button>
+      </div>
+    </header>
+
+    <main class="main subpage-main">
+      <h1 class="page-title">선생님 목록</h1>
+      <div class="teacher-list-wrap">
+        {% for teacher in teachers %}
+          <div class="result-card teacher-card">
+            <div class="result-type">{{ teacher.type }}</div>
+            <div class="result-title">{{ teacher.title }}</div>
+            <div class="result-desc">{{ teacher.desc }}</div>
+            <div class="result-tags">
+              <span class="tag">teacher_id: {{ teacher.id }}</span>
+              {% for tag in teacher.tags %}
+                <span class="tag">{{ tag }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+</body>
+</html>

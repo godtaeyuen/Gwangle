@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>급식</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="topbar-right">
+        <button class="top-btn" onclick="location.href='/'">메인으로</button>
+      </div>
+    </header>
+
+    <main class="main subpage-main">
+      <h1 class="page-title" id="mealTitle">급식 불러오는 중...</h1>
+      <p class="page-desc" id="mealDesc"></p>
+      <div id="mealContainer" class="meal-container"></div>
+    </main>
+  </div>
+
+  <script>
+    function getQueryParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    function renderMealCards(items) {
+      if (!items || !items.length) {
+        return '<div class="empty-message">급식 정보가 없습니다.</div>';
+      }
+
+      return items.map(item => `
+        <div class="result-card meal-card">
+          <div class="result-title">${item.date} (${item.weekday})</div>
+          <div class="result-tags">
+            ${(item.menus || []).map(menu => `<span class="tag">${menu}</span>`).join("")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function loadMeal() {
+      const mode = getQueryParam("mode") || "today";
+
+      try {
+        const res = await fetch(`/api/meal?mode=${encodeURIComponent(mode)}`);
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          document.getElementById("mealTitle").textContent = "급식 정보를 불러오지 못했습니다.";
+          document.getElementById("mealDesc").textContent = data.message || "";
+          document.getElementById("mealContainer").innerHTML = `<div class="empty-message">다시 시도해주세요.</div>`;
+          return;
+        }
+
+        document.getElementById("mealTitle").textContent = data.title || "급식";
+        document.getElementById("mealDesc").textContent = data.desc || "";
+        document.getElementById("mealContainer").innerHTML = renderMealCards(data.items || []);
+      } catch (error) {
+        console.error(error);
+        document.getElementById("mealTitle").textContent = "급식 정보를 불러오지 못했습니다.";
+        document.getElementById("mealDesc").textContent = "서버 연결 또는 데이터 로드 중 문제가 발생했습니다.";
+        document.getElementById("mealContainer").innerHTML = `<div class="empty-message">다시 시도해주세요.</div>`;
+      }
+    }
+
+    loadMeal();
+  </script>
+</body>
+</html>
