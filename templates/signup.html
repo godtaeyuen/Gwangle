@@ -1,23 +1,162 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>회원가입 - 광글</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>광글 회원가입</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <style>
+    body {
+      background: #ffffff;
+    }
+
+    .auth-main {
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 48px 18px;
+    }
+
+    .auth-card {
+      border: 1px solid #dadce0;
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 2px 14px rgba(60, 64, 67, 0.1);
+      background: #ffffff;
+    }
+
+    .auth-title {
+      margin: 0 0 8px;
+      font-size: 30px;
+      color: #202124;
+    }
+
+    .auth-desc {
+      margin: 0 0 22px;
+      color: #5f6368;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .role-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .role-tab {
+      border: 1px solid #dadce0;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #3c4043;
+      padding: 11px 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .role-tab.active {
+      background: #1a73e8;
+      color: #ffffff;
+      border-color: #1a73e8;
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .auth-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #3c4043;
+    }
+
+    .auth-input {
+      width: 100%;
+      height: 48px;
+      border: 1px solid #dadce0;
+      border-radius: 16px;
+      padding: 0 14px;
+      font-size: 15px;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .auth-input:focus {
+      border-color: #1a73e8;
+    }
+
+    .auth-btn {
+      height: 50px;
+      border: none;
+      border-radius: 999px;
+      background: #1a73e8;
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .auth-btn:hover {
+      background: #1765cc;
+    }
+
+    .auth-links {
+      margin-top: 18px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .auth-links a {
+      color: #1a73e8;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .flash-wrap {
+      margin-bottom: 14px;
+    }
+
+    .flash-message {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #fce8e6;
+      color: #c5221f;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .role-help {
+      margin: 0 0 18px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #f8fafd;
+      border: 1px solid #eceff1;
+      color: #5f6368;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+  </style>
 </head>
 <body>
   <div class="page">
     <header class="topbar">
       <div class="topbar-right">
         <button class="top-btn" onclick="location.href='/'">메인으로</button>
+        <button class="top-btn" onclick="location.href='/login'">로그인</button>
       </div>
     </header>
 
-    <main class="main auth-main">
+    <main class="auth-main">
       {% with messages = get_flashed_messages() %}
         {% if messages %}
-          <div class="flash-wrap auth-flash-wrap">
+          <div class="flash-wrap">
             {% for message in messages %}
               <div class="flash-message">{{ message }}</div>
             {% endfor %}
@@ -25,29 +164,74 @@
         {% endif %}
       {% endwith %}
 
-      <h1 class="logo-text auth-logo">
-        <span class="logo-blue">G</span><span class="logo-red">w</span><span class="logo-yellow">a</span><span class="logo-blue">n</span><span class="logo-green">g</span><span class="logo-red">l</span><span class="logo-yellow">e</span>
-      </h1>
+      <section class="auth-card">
+        <h1 class="auth-title">회원가입</h1>
+        <p class="auth-desc">
+          학생 또는 선생님 계정으로 가입할 수 있습니다.
+          관리자 계정은 회원가입으로 만들 수 없습니다.
+        </p>
 
-      <div class="auth-card">
-        <div class="step-badge">1 / 2 단계</div>
-        <h2 class="auth-title">개인정보 입력</h2>
-        <p class="auth-desc">아이디와 비밀번호를 입력해주세요.</p>
+        <div class="role-tabs">
+          <button type="button" class="role-tab active" data-role="student">학생 회원가입</button>
+          <button type="button" class="role-tab" data-role="teacher">선생님 회원가입</button>
+        </div>
+
+        <p id="roleHelp" class="role-help">
+          학생 계정은 학번, 이름, 담임선생님 정보를 추가로 입력합니다.
+        </p>
 
         <form class="auth-form" method="POST" action="/signup">
-          <input type="text" class="auth-input" name="username" placeholder="아이디">
-          <input type="password" class="auth-input" name="password" placeholder="비밀번호">
-          <input type="password" class="auth-input" name="passwordConfirm" placeholder="비밀번호 확인">
+          <input type="hidden" id="signupRole" name="signupRole" value="student">
 
-          <button type="submit" class="auth-submit-btn">다음으로</button>
+          <label class="auth-label" for="username">아이디</label>
+          <input id="username" name="username" class="auth-input" type="text" placeholder="아이디 입력" autocomplete="username">
+
+          <label class="auth-label" for="password">비밀번호</label>
+          <input id="password" name="password" class="auth-input" type="password" placeholder="비밀번호 입력" autocomplete="new-password">
+
+          <label class="auth-label" for="passwordConfirm">비밀번호 확인</label>
+          <input id="passwordConfirm" name="passwordConfirm" class="auth-input" type="password" placeholder="비밀번호 다시 입력" autocomplete="new-password">
+
+          <button id="signupBtn" class="auth-btn" type="submit">학생 회원가입 계속하기</button>
         </form>
 
-        <div class="auth-footer-text">
-          이미 계정이 있나요?
-          <a href="/login">로그인</a>
+        <div class="auth-links">
+          <a href="/">메인으로</a>
+          <a href="/login">이미 계정이 있어요</a>
         </div>
-      </div>
+      </section>
     </main>
   </div>
+
+  <script>
+    const tabs = document.querySelectorAll(".role-tab");
+    const signupRole = document.getElementById("signupRole");
+    const roleHelp = document.getElementById("roleHelp");
+    const signupBtn = document.getElementById("signupBtn");
+
+    const roleInfo = {
+      student: {
+        help: "학생 계정은 학번, 이름, 담임선생님 정보를 추가로 입력합니다.",
+        button: "학생 회원가입 계속하기"
+      },
+      teacher: {
+        help: "선생님 계정은 이름, 담당 과목, 직책 정보를 추가로 입력합니다.",
+        button: "선생님 회원가입 계속하기"
+      }
+    };
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        const role = tab.dataset.role;
+
+        tabs.forEach(item => item.classList.remove("active"));
+        tab.classList.add("active");
+
+        signupRole.value = role;
+        roleHelp.textContent = roleInfo[role].help;
+        signupBtn.textContent = roleInfo[role].button;
+      });
+    });
+  </script>
 </body>
 </html>

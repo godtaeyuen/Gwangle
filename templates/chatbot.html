@@ -1,64 +1,377 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>학교 정보 챗봇</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>광글 챗봇</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <style>
+    body {
+      background: #ffffff;
+    }
+
+    .chat-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-main {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 18px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      flex: 1;
+    }
+
+    .chat-hero {
+      border: 1px solid #dadce0;
+      border-radius: 24px;
+      padding: 22px;
+      background: #ffffff;
+      box-shadow: 0 2px 10px rgba(60, 64, 67, 0.08);
+    }
+
+    .chat-title {
+      margin: 0 0 8px;
+      font-size: 28px;
+      color: #202124;
+    }
+
+    .chat-desc {
+      margin: 0;
+      color: #5f6368;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .chat-box {
+      border: 1px solid #dadce0;
+      border-radius: 24px;
+      background: #ffffff;
+      box-shadow: 0 2px 10px rgba(60, 64, 67, 0.08);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 560px;
+    }
+
+    .chat-toolbar {
+      padding: 14px 16px;
+      border-bottom: 1px solid #eceff1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: #f8fafd;
+    }
+
+    .chat-toolbar-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #202124;
+    }
+
+    .chat-clear-btn {
+      border: 1px solid #dadce0;
+      background: #ffffff;
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor: pointer;
+      color: #5f6368;
+      font-size: 13px;
+    }
+
+    .chat-clear-btn:hover {
+      background: #f1f3f4;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 18px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 420px;
+      max-height: 560px;
+    }
+
+    .message-row {
+      display: flex;
+      width: 100%;
+    }
+
+    .message-row.user {
+      justify-content: flex-end;
+    }
+
+    .message-row.bot {
+      justify-content: flex-start;
+    }
+
+    .message-bubble {
+      max-width: 78%;
+      padding: 12px 14px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: keep-all;
+    }
+
+    .message-row.user .message-bubble {
+      background: #1a73e8;
+      color: #ffffff;
+      border-bottom-right-radius: 6px;
+    }
+
+    .message-row.bot .message-bubble {
+      background: #f1f3f4;
+      color: #202124;
+      border-bottom-left-radius: 6px;
+    }
+
+    .chat-input-area {
+      border-top: 1px solid #eceff1;
+      padding: 14px;
+      display: flex;
+      gap: 10px;
+      background: #ffffff;
+    }
+
+    .chat-input {
+      flex: 1;
+      height: 46px;
+      border: 1px solid #dadce0;
+      border-radius: 999px;
+      padding: 0 16px;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .chat-input:focus {
+      border-color: #1a73e8;
+    }
+
+    .chat-send-btn {
+      height: 46px;
+      border: none;
+      border-radius: 999px;
+      background: #1a73e8;
+      color: #ffffff;
+      padding: 0 18px;
+      cursor: pointer;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .chat-send-btn:hover {
+      background: #1765cc;
+    }
+
+    .chat-send-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .quick-questions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .quick-btn {
+      border: 1px solid #dadce0;
+      background: #ffffff;
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor: pointer;
+      color: #3c4043;
+      font-size: 13px;
+    }
+
+    .quick-btn:hover {
+      background: #f1f3f4;
+    }
+
+    @media (max-width: 700px) {
+      .chat-main {
+        padding: 18px 12px 28px;
+      }
+
+      .chat-title {
+        font-size: 24px;
+      }
+
+      .message-bubble {
+        max-width: 88%;
+      }
+
+      .chat-input-area {
+        flex-direction: column;
+      }
+
+      .chat-send-btn {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="page">
+  <div class="chat-page">
     <header class="topbar">
       <div class="topbar-right">
         <button class="top-btn" onclick="location.href='/'">메인으로</button>
+        {% if current_user %}
+          <span class="user-badge">{{ current_user["student_name"] }} ({{ current_user["username"] }})</span>
+          <button class="top-btn" onclick="location.href='/profile'">프로필</button>
+          <button class="top-btn" onclick="location.href='/logout'">로그아웃</button>
+        {% else %}
+          <button class="top-btn" onclick="location.href='/login'">로그인</button>
+          <button class="top-btn" onclick="location.href='/signup'">회원가입</button>
+        {% endif %}
       </div>
     </header>
 
-    <main class="main chatbot-main">
-      <h1 class="page-title">학교 정보 챗봇</h1>
-      <p class="page-desc">급식, 시간표, 선생님/시설 정보, 학사일정까지 함께 답변합니다.</p>
+    <main class="chat-main">
+      <section class="chat-hero">
+        <h1 class="chat-title">광글 챗봇</h1>
+        <p class="chat-desc">
+          학교 정보, 급식, 시간표, 학사일정, 선생님 정보, 대입 상담을 질문할 수 있습니다.
+          대화 기록은 이 브라우저에 저장되어 메인화면에 갔다 와도 유지됩니다.
+        </p>
+      </section>
 
-      <div class="chatbot-card">
-        <div id="chatMessages" class="chat-messages">
-          <div class="chat-message bot">
-            안녕! 광명고 관련 질문을 해줘.
-            예: 오늘 급식, 내 시간표, 9월 일정, 추석 언제야, 보건실 위치
-          </div>
+      <section class="quick-questions">
+        <button class="quick-btn" onclick="sendQuickQuestion('전체 학사일정 알려줘')">전체 학사일정</button>
+        <button class="quick-btn" onclick="sendQuickQuestion('이번 주 급식 알려줘')">이번 주 급식</button>
+        <button class="quick-btn" onclick="sendQuickQuestion('내 시간표 알려줘')">내 시간표</button>
+        <button class="quick-btn" onclick="sendQuickQuestion('선생님 목록 알려줘')">선생님 목록</button>
+        <button class="quick-btn" onclick="sendQuickQuestion('대입 상담을 받고 싶어')">대입 상담</button>
+      </section>
+
+      <section class="chat-box">
+        <div class="chat-toolbar">
+          <div class="chat-toolbar-title">대화</div>
+          <button class="chat-clear-btn" onclick="clearChatHistory()">대화 초기화</button>
         </div>
 
-        <div class="chat-input-row">
+        <div id="chatMessages" class="chat-messages"></div>
+
+        <div class="chat-input-area">
           <input
-            type="text"
             id="chatInput"
             class="chat-input"
-            placeholder="예: 9월 일정 알려줘"
+            type="text"
+            placeholder="질문을 입력하세요"
+            autocomplete="off"
           >
-          <button id="sendChatBtn" class="chat-send-btn">전송</button>
+          <button id="sendBtn" class="chat-send-btn" onclick="sendMessage()">전송</button>
         </div>
-      </div>
+      </section>
     </main>
   </div>
 
   <script>
+    const CHAT_STORAGE_KEY = "gwangle_chat_history_v2";
+
     const chatMessages = document.getElementById("chatMessages");
     const chatInput = document.getElementById("chatInput");
-    const sendChatBtn = document.getElementById("sendChatBtn");
+    const sendBtn = document.getElementById("sendBtn");
 
-    function addMessage(text, sender) {
-      const div = document.createElement("div");
-      div.className = `chat-message ${sender}`;
-      div.textContent = text;
-      chatMessages.appendChild(div);
+    let chatHistory = [];
+
+    function loadChatHistory() {
+      try {
+        const saved = localStorage.getItem(CHAT_STORAGE_KEY);
+        chatHistory = saved ? JSON.parse(saved) : [];
+      } catch (error) {
+        chatHistory = [];
+      }
+
+      if (chatHistory.length === 0) {
+        chatHistory.push({
+          role: "bot",
+          text: "안녕하세요. 광글 챗봇입니다. 학교 정보, 급식, 시간표, 학사일정, 대입 상담을 질문해보세요."
+        });
+        saveChatHistory();
+      }
+
+      renderMessages();
+    }
+
+    function saveChatHistory() {
+      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory));
+    }
+
+    function renderMessages() {
+      chatMessages.innerHTML = "";
+
+      chatHistory.forEach(message => {
+        appendMessageElement(message.role, message.text);
+      });
+
+      scrollToBottom();
+    }
+
+    function appendMessageElement(role, text) {
+      const row = document.createElement("div");
+      row.className = `message-row ${role === "user" ? "user" : "bot"}`;
+
+      const bubble = document.createElement("div");
+      bubble.className = "message-bubble";
+      bubble.textContent = text;
+
+      row.appendChild(bubble);
+      chatMessages.appendChild(row);
+    }
+
+    function addMessage(role, text) {
+      chatHistory.push({ role, text });
+
+      if (chatHistory.length > 80) {
+        chatHistory = chatHistory.slice(chatHistory.length - 80);
+      }
+
+      saveChatHistory();
+      appendMessageElement(role, text);
+      scrollToBottom();
+    }
+
+    function scrollToBottom() {
       chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function setLoading(isLoading) {
+      sendBtn.disabled = isLoading;
+      sendBtn.textContent = isLoading ? "전송 중..." : "전송";
+      chatInput.disabled = isLoading;
     }
 
     async function sendMessage() {
       const message = chatInput.value.trim();
-      if (!message) return;
 
-      addMessage(message, "user");
+      if (!message) {
+        return;
+      }
+
+      addMessage("user", message);
       chatInput.value = "";
-      sendChatBtn.disabled = true;
+      setLoading(true);
+
+      const loadingId = `loading-${Date.now()}`;
+      chatHistory.push({
+        role: "bot",
+        text: "답변을 생성하는 중입니다...",
+        loadingId
+      });
+      saveChatHistory();
+      renderMessages();
 
       try {
         const res = await fetch("/api/chat", {
@@ -70,23 +383,65 @@
         });
 
         const data = await res.json();
-        addMessage(data.reply || "응답을 가져오지 못했어.", "bot");
+
+        chatHistory = chatHistory.filter(item => item.loadingId !== loadingId);
+
+        if (data.success) {
+          chatHistory.push({
+            role: "bot",
+            text: data.reply || "답변을 받지 못했습니다."
+          });
+        } else {
+          chatHistory.push({
+            role: "bot",
+            text: data.reply || data.message || "오류가 발생했습니다."
+          });
+        }
+
+        saveChatHistory();
+        renderMessages();
+
       } catch (error) {
-        console.error(error);
-        addMessage("챗봇 응답 중 오류가 발생했어.", "bot");
+        chatHistory = chatHistory.filter(item => item.loadingId !== loadingId);
+        chatHistory.push({
+          role: "bot",
+          text: "챗봇 요청 중 오류가 발생했습니다."
+        });
+        saveChatHistory();
+        renderMessages();
+
       } finally {
-        sendChatBtn.disabled = false;
+        setLoading(false);
         chatInput.focus();
       }
     }
 
-    sendChatBtn.addEventListener("click", sendMessage);
+    function sendQuickQuestion(question) {
+      chatInput.value = question;
+      sendMessage();
+    }
 
-    chatInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
+    function clearChatHistory() {
+      const ok = confirm("대화 기록을 모두 삭제할까요?");
+      if (!ok) return;
+
+      chatHistory = [{
+        role: "bot",
+        text: "대화 기록이 초기화되었습니다. 다시 질문해보세요."
+      }];
+
+      saveChatHistory();
+      renderMessages();
+      chatInput.focus();
+    }
+
+    chatInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
         sendMessage();
       }
     });
+
+    loadChatHistory();
   </script>
 </body>
 </html>

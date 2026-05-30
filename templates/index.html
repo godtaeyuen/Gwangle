@@ -85,20 +85,19 @@
             <div class="shortcut-label">챗봇</div>
           </a>
 
-          <a href="/profile" class="shortcut-item">
-            <div class="shortcut-circle">👤</div>
-            <div class="shortcut-label">프로필</div>
+          <a href="/game" class="shortcut-item">
+            <div class="shortcut-circle">🎮</div>
+            <div class="shortcut-label">미니게임</div>
           </a>
 
-          <a href="#" class="shortcut-item" onclick="event.preventDefault(); searchFavorite('학생부');">
-            <div class="shortcut-circle">🏫</div>
-            <div class="shortcut-label">학생부</div>
-          </a>
-
-          <a href="#" class="shortcut-item" onclick="event.preventDefault(); searchFavorite('9월 일정');">
+          <a href="{{ url_for('static', filename='calendar.html') }}" class="shortcut-item">
             <div class="shortcut-circle">📅</div>
             <div class="shortcut-label">학사일정</div>
           </a>
+          <a href="/promo/request" class="shortcut-item">
+  <div class="shortcut-circle">📢</div>
+  <div class="shortcut-label">홍보 신청</div>
+</a>
         </div>
       </section>
 
@@ -113,12 +112,5 @@
   </div>
 
   <script src="{{ url_for('static', filename='main.js') }}"></script>
-  <script>
-    function searchFavorite(keyword) {
-      const input = document.getElementById("searchInput");
-      input.value = keyword;
-      searchData();
-    }
-  </script>
 </body>
 </html>

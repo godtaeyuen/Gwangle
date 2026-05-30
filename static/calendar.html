@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>광글 학사일정</title>
+  <link rel="stylesheet" href="/static/style.css">
+
+  <style>
+    body {
+      background: #ffffff;
+      color: #202124;
+    }
+
+    .calendar-page {
+      min-height: 100vh;
+    }
+
+    .calendar-main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 18px 48px;
+    }
+
+    .calendar-hero {
+      border: 1px solid #dadce0;
+      border-radius: 28px;
+      padding: 28px;
+      background: #ffffff;
+      box-shadow: 0 2px 12px rgba(60, 64, 67, 0.08);
+      margin-bottom: 22px;
+    }
+
+    .calendar-title {
+      margin: 0 0 10px;
+      font-size: 34px;
+      font-weight: 800;
+      color: #202124;
+    }
+
+    .calendar-desc {
+      margin: 0;
+      color: #5f6368;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .month-list {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .month-card {
+      border: 1px solid #dadce0;
+      border-radius: 24px;
+      background: #ffffff;
+      box-shadow: 0 2px 12px rgba(60, 64, 67, 0.08);
+      overflow: hidden;
+    }
+
+    .month-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 22px;
+      background: #f8fafd;
+      border-bottom: 1px solid #eceff1;
+    }
+
+    .month-title {
+      margin: 0;
+      font-size: 22px;
+      color: #1a73e8;
+    }
+
+    .month-count {
+      font-size: 13px;
+      color: #5f6368;
+      background: #ffffff;
+      border: 1px solid #dadce0;
+      border-radius: 999px;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+
+    .event-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .event-item {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 14px;
+      padding: 15px 22px;
+      border-bottom: 1px solid #f1f3f4;
+      align-items: start;
+    }
+
+    .event-item:last-child {
+      border-bottom: none;
+    }
+
+    .event-date {
+      font-weight: 800;
+      color: #3c4043;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .event-title {
+      color: #202124;
+      font-size: 15px;
+      line-height: 1.5;
+      word-break: keep-all;
+    }
+
+    .empty-message {
+      border: 1px solid #dadce0;
+      border-radius: 24px;
+      padding: 28px;
+      color: #5f6368;
+      background: #ffffff;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(60, 64, 67, 0.08);
+    }
+
+    .calendar-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .calendar-btn {
+      border: 1px solid #dadce0;
+      background: #ffffff;
+      color: #3c4043;
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .calendar-btn.primary {
+      background: #1a73e8;
+      color: #ffffff;
+      border-color: #1a73e8;
+    }
+
+    .calendar-btn:hover {
+      background: #f1f3f4;
+    }
+
+    .calendar-btn.primary:hover {
+      background: #1765cc;
+    }
+
+    @media (max-width: 700px) {
+      .calendar-main {
+        padding: 20px 12px 36px;
+      }
+
+      .calendar-title {
+        font-size: 28px;
+      }
+
+      .event-item {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      .month-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="calendar-page">
+    <header class="topbar">
+      <div class="topbar-right">
+        <button class="top-btn" onclick="location.href='/'">메인으로</button>
+        <button class="top-btn" onclick="location.href='/chatbot'">챗봇</button>
+      </div>
+    </header>
+
+    <main class="calendar-main">
+      <section class="calendar-hero">
+        <h1 class="calendar-title">광명고 학사일정</h1>
+        <p class="calendar-desc">
+          5월부터 12월까지의 학사일정을 월별로 정리해서 보여줍니다.
+          메인 검색 결과가 아니라 학사일정 전용 페이지입니다.
+        </p>
+      </section>
+
+      <div class="calendar-actions">
+        <button class="calendar-btn" onclick="location.href='/'">메인으로 돌아가기</button>
+        <button class="calendar-btn primary" onclick="loadCalendar()">새로고침</button>
+      </div>
+
+      <section id="calendarContent" class="month-list">
+        <div class="empty-message">학사일정을 불러오는 중입니다...</div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const MONTH_ORDER = [5, 6, 7, 8, 9, 10, 11, 12];
+
+    function normalizeLine(line) {
+      return line.replace(/^-\s*/, "").trim();
+    }
+
+    function extractMonthFromHeader(line) {
+      const match = line.match(/\[?\s*(\d{1,2})\s*월\s*\]?/);
+      if (!match) return null;
+
+      const month = Number(match[1]);
+      if (!MONTH_ORDER.includes(month)) return null;
+
+      return month;
+    }
+
+    function extractDaySortValue(dateText) {
+      const numbers = dateText.match(/\d+/g);
+
+      if (!numbers || numbers.length === 0) {
+        return 9999;
+      }
+
+      if (numbers.length >= 2) {
+        return Number(numbers[0]) * 100 + Number(numbers[1]);
+      }
+
+      return Number(numbers[0]) * 100;
+    }
+
+    function splitDateAndTitle(line) {
+      const normalized = normalizeLine(line);
+      const colonIndex = normalized.indexOf(":");
+
+      if (colonIndex === -1) {
+        return {
+          date: "",
+          title: normalized
+        };
+      }
+
+      return {
+        date: normalized.slice(0, colonIndex).trim(),
+        title: normalized.slice(colonIndex + 1).trim()
+      };
+    }
+
+    function parseCalendarText(text) {
+      const grouped = {};
+
+      MONTH_ORDER.forEach(month => {
+        grouped[month] = [];
+      });
+
+      const lines = text.split("\n").map(line => line.trim()).filter(Boolean);
+
+      let currentMonth = null;
+
+      lines.forEach(line => {
+        if (line.includes("전체 학사일정")) {
+          return;
+        }
+
+        const headerMonth = extractMonthFromHeader(line);
+        if (headerMonth) {
+          currentMonth = headerMonth;
+          return;
+        }
+
+        if (!line.startsWith("-")) {
+          return;
+        }
+
+        const event = splitDateAndTitle(line);
+
+        if (!currentMonth) {
+          const guessedMonth = extractMonthFromHeader(event.date);
+          currentMonth = guessedMonth;
+        }
+
+        if (currentMonth && grouped[currentMonth]) {
+          grouped[currentMonth].push(event);
+        }
+      });
+
+      MONTH_ORDER.forEach(month => {
+        grouped[month].sort((a, b) => {
+          return extractDaySortValue(a.date) - extractDaySortValue(b.date);
+        });
+      });
+
+      return grouped;
+    }
+
+    function renderCalendar(grouped) {
+      const container = document.getElementById("calendarContent");
+      container.innerHTML = "";
+
+      let hasAnyEvent = false;
+
+      MONTH_ORDER.forEach(month => {
+        const events = grouped[month] || [];
+
+        if (events.length > 0) {
+          hasAnyEvent = true;
+        }
+
+        const card = document.createElement("article");
+        card.className = "month-card";
+
+        const header = document.createElement("div");
+        header.className = "month-header";
+
+        const title = document.createElement("h2");
+        title.className = "month-title";
+        title.textContent = `${month}월`;
+
+        const count = document.createElement("div");
+        count.className = "month-count";
+        count.textContent = `${events.length}개 일정`;
+
+        header.appendChild(title);
+        header.appendChild(count);
+
+        const list = document.createElement("div");
+        list.className = "event-list";
+
+        if (events.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "event-item";
+
+          const emptyDate = document.createElement("div");
+          emptyDate.className = "event-date";
+          emptyDate.textContent = "-";
+
+          const emptyTitle = document.createElement("div");
+          emptyTitle.className = "event-title";
+          emptyTitle.textContent = "등록된 일정이 없습니다.";
+
+          empty.appendChild(emptyDate);
+          empty.appendChild(emptyTitle);
+          list.appendChild(empty);
+        } else {
+          events.forEach(event => {
+            const item = document.createElement("div");
+            item.className = "event-item";
+
+            const date = document.createElement("div");
+            date.className = "event-date";
+            date.textContent = event.date || "-";
+
+            const eventTitle = document.createElement("div");
+            eventTitle.className = "event-title";
+            eventTitle.textContent = event.title || "-";
+
+            item.appendChild(date);
+            item.appendChild(eventTitle);
+            list.appendChild(item);
+          });
+        }
+
+        card.appendChild(header);
+        card.appendChild(list);
+        container.appendChild(card);
+      });
+
+      if (!hasAnyEvent) {
+        container.innerHTML = `
+          <div class="empty-message">
+            학사일정 데이터가 없습니다. data/academic_calendar.json 파일이나 app.py의 학사일정 응답을 확인해주세요.
+          </div>
+        `;
+      }
+    }
+
+    async function loadCalendar() {
+      const container = document.getElementById("calendarContent");
+      container.innerHTML = `<div class="empty-message">학사일정을 불러오는 중입니다...</div>`;
+
+      try {
+        const res = await fetch("/api/search?query=" + encodeURIComponent("전체 학사일정"));
+        const data = await res.json();
+
+        if (!Array.isArray(data) || data.length === 0 || !data[0].desc) {
+          container.innerHTML = `
+            <div class="empty-message">
+              학사일정을 불러오지 못했습니다. 검색 API에서 전체 학사일정이 반환되는지 확인해주세요.
+            </div>
+          `;
+          return;
+        }
+
+        const grouped = parseCalendarText(data[0].desc);
+        renderCalendar(grouped);
+
+      } catch (error) {
+        container.innerHTML = `
+          <div class="empty-message">
+            학사일정을 불러오는 중 오류가 발생했습니다.
+          </div>
+        `;
+      }
+    }
+
+    loadCalendar();
+  </script>
+</body>
+</html>

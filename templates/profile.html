@@ -11,6 +11,7 @@
     <header class="topbar">
       <div class="topbar-right">
         <button class="top-btn" onclick="location.href='/'">메인으로</button>
+        <button class="top-btn" onclick="location.href='/chatbot'">대입 상담 챗봇</button>
         <button class="top-btn" onclick="location.href='/timetable'">내 시간표</button>
         <button class="top-btn" onclick="location.href='/logout'">로그아웃</button>
       </div>
@@ -30,7 +31,10 @@
       <section class="profile-hero">
         <div>
           <h1 class="page-title">내 프로필</h1>
-          <p class="page-desc">개인정보, 담임선생님, 비밀번호, 내신 기록을 관리합니다.</p>
+          <p class="page-desc">
+            개인정보, 내신, 모의고사, 생기부 요약을 관리합니다.
+            대입 상담 챗봇은 이 정보를 바탕으로 참고용 상담을 제공합니다.
+          </p>
         </div>
         <div class="profile-avatar">
           {{ profile_user["student_name"][0] if profile_user["student_name"] else "G" }}
@@ -153,8 +157,80 @@
         </div>
 
         <div class="profile-card profile-grade-card">
+          <h2 class="profile-card-title">대입 상담용 정보</h2>
+          <p class="profile-card-desc">
+            희망 진로, 희망 학과, 생기부 요약을 입력하면 챗봇이 더 구체적으로 상담할 수 있습니다.
+          </p>
+
+          <form class="profile-form" method="POST" action="/profile">
+            <input type="hidden" name="action" value="update_student_record">
+
+            <label class="profile-label">진로 희망</label>
+            <input
+              type="text"
+              class="auth-input"
+              name="careerGoal"
+              value="{{ student_record_note['career_goal'] or '' }}"
+              placeholder="예: 소프트웨어 개발자, 교사, 간호사"
+            >
+
+            <label class="profile-label">희망 학과</label>
+            <input
+              type="text"
+              class="auth-input"
+              name="targetMajor"
+              value="{{ student_record_note['target_major'] or '' }}"
+              placeholder="예: 컴퓨터공학과, 경영학과"
+            >
+
+            <label class="profile-label">목표 대학/계열</label>
+            <input
+              type="text"
+              class="auth-input"
+              name="targetUniversities"
+              value="{{ student_record_note['target_universities'] or '' }}"
+              placeholder="예: 수도권 컴공, 국립대 공대, 인서울 경영"
+            >
+
+            <label class="profile-label">생기부 요약</label>
+            <textarea
+              class="auth-input"
+              name="studentRecordSummary"
+              style="height: 110px; padding-top: 12px;"
+              placeholder="세특, 진로활동, 자율활동 등 핵심 내용을 요약"
+            >{{ student_record_note['student_record_summary'] or '' }}</textarea>
+
+            <label class="profile-label">활동 요약</label>
+            <textarea
+              class="auth-input"
+              name="activitiesSummary"
+              style="height: 90px; padding-top: 12px;"
+              placeholder="동아리, 프로젝트, 탐구 활동 등"
+            >{{ student_record_note['activities_summary'] or '' }}</textarea>
+
+            <label class="profile-label">강점</label>
+            <textarea
+              class="auth-input"
+              name="strengths"
+              style="height: 80px; padding-top: 12px;"
+              placeholder="예: 수학 성적이 안정적, 컴퓨터 동아리 활동 있음"
+            >{{ student_record_note['strengths'] or '' }}</textarea>
+
+            <label class="profile-label">고민/보완점</label>
+            <textarea
+              class="auth-input"
+              name="concerns"
+              style="height: 80px; padding-top: 12px;"
+              placeholder="예: 영어가 약함, 생기부 활동이 부족함"
+            >{{ student_record_note['concerns'] or '' }}</textarea>
+
+            <button type="submit" class="auth-submit-btn">대입 상담용 정보 저장</button>
+          </form>
+        </div>
+
+        <div class="profile-card profile-grade-card">
           <h2 class="profile-card-title">내신 기록</h2>
-          <p class="profile-card-desc">간단한 내신 기록을 직접 추가하고 관리할 수 있습니다.</p>
+          <p class="profile-card-desc">과목별 내신 기록을 추가하고 관리할 수 있습니다.</p>
 
           <form class="profile-form grade-form" method="POST" action="/profile">
             <input type="hidden" name="action" value="add_grade">
@@ -228,6 +304,128 @@
               <div class="empty-message">아직 등록된 내신 기록이 없습니다.</div>
             {% endif %}
           </div>
+        </div>
+
+        <div class="profile-card profile-grade-card">
+          <h2 class="profile-card-title">모의고사 기록</h2>
+          <p class="profile-card-desc">모의고사 등급을 입력하면 정시/수시 방향 상담에 참고됩니다.</p>
+
+          <form class="profile-form grade-form" method="POST" action="/profile">
+            <input type="hidden" name="action" value="add_mock_exam">
+
+            <div class="grade-form-grid">
+              <input
+                type="text"
+                class="auth-input"
+                name="examName"
+                placeholder="시험명 예: 3월 모의고사"
+              >
+
+              <input
+                type="text"
+                class="auth-input"
+                name="examDate"
+                placeholder="날짜 예: 2026-03"
+              >
+
+              <input
+                type="text"
+                class="auth-input"
+                name="koreanGrade"
+                placeholder="국어 등급"
+              >
+
+              <input
+                type="text"
+                class="auth-input"
+                name="mathGrade"
+                placeholder="수학 등급"
+              >
+
+              <input
+                type="text"
+                class="auth-input"
+                name="englishGrade"
+                placeholder="영어 등급"
+              >
+
+              <input
+                type="text"
+                class="auth-input"
+                name="inquiryGrade"
+                placeholder="탐구 등급"
+              >
+            </div>
+
+            <input
+              type="text"
+              class="auth-input"
+              name="mockNote"
+              placeholder="메모 예: 수학 시간 부족, 영어 안정적"
+            >
+
+            <button type="submit" class="auth-submit-btn">모의고사 기록 추가</button>
+          </form>
+
+          <div class="grade-records">
+            {% if mock_exam_records %}
+              {% for record in mock_exam_records %}
+                <div class="grade-record-card">
+                  <div class="grade-record-main">
+                    <strong>{{ record["exam_name"] }}</strong>
+                    <span>{{ record["exam_date"] or "-" }}</span>
+                  </div>
+
+                  <div class="grade-record-sub">
+                    국어: {{ record["korean_grade"] or "-" }} /
+                    수학: {{ record["math_grade"] or "-" }} /
+                    영어: {{ record["english_grade"] or "-" }} /
+                    탐구: {{ record["inquiry_grade"] or "-" }}
+                  </div>
+
+                  {% if record["note"] %}
+                    <div class="grade-record-note">{{ record["note"] }}</div>
+                  {% endif %}
+
+                  <form method="POST" action="/profile" class="delete-grade-form">
+                    <input type="hidden" name="action" value="delete_mock_exam">
+                    <input type="hidden" name="mockExamId" value="{{ record['id'] }}">
+                    <button type="submit" class="small-danger-btn">삭제</button>
+                  </form>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="empty-message">아직 등록된 모의고사 기록이 없습니다.</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="profile-card profile-grade-card">
+          <h2 class="profile-card-title">대입 상담 사용 안내</h2>
+          <p class="profile-card-desc">
+            챗봇에 아래처럼 질문하면 입력한 내신, 모의고사, 생기부 요약을 바탕으로 참고용 상담을 제공합니다.
+          </p>
+
+          <div class="profile-info-list">
+            <div class="profile-info-row">
+              <span>예시 질문 1</span>
+              <strong>내 기록 기반으로 대입 상담해줘</strong>
+            </div>
+            <div class="profile-info-row">
+              <span>예시 질문 2</span>
+              <strong>컴퓨터공학과 가려면 뭐 보완해야 해?</strong>
+            </div>
+            <div class="profile-info-row">
+              <span>예시 질문 3</span>
+              <strong>내신이랑 모고 기준으로 수시/정시 방향 알려줘</strong>
+            </div>
+          </div>
+
+          <p class="profile-card-desc" style="margin-top: 18px;">
+            주의: 이 기능은 참고용입니다. 실제 지원 판단은 최신 모집요강과 담임/진학 선생님 상담을 함께 확인해야 합니다.
+          </p>
+
+          <button class="auth-submit-btn" onclick="location.href='/chatbot'">대입 상담 챗봇으로 이동</button>
         </div>
       </section>
     </main>

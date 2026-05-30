@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ promo["promo_what"] }} - 광글 홍보</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <style>
+    body {
+      background: #ffffff;
+      color: #202124;
+    }
+
+    .detail-main {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 34px 18px 52px;
+    }
+
+    .detail-card {
+      border: 1px solid #dadce0;
+      border-radius: 30px;
+      overflow: hidden;
+      background: #ffffff;
+      box-shadow: 0 2px 16px rgba(60, 64, 67, 0.12);
+    }
+
+    .detail-image {
+      width: 100%;
+      max-height: 560px;
+      object-fit: contain;
+      background: #f8fafd;
+      border-bottom: 1px solid #eceff1;
+    }
+
+    .detail-content {
+      padding: 26px;
+    }
+
+    .detail-badge {
+      display: inline-flex;
+      border-radius: 999px;
+      background: #e8f0fe;
+      color: #174ea6;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .detail-title {
+      margin: 0 0 12px;
+      font-size: 32px;
+      color: #202124;
+    }
+
+    .detail-meta {
+      color: #5f6368;
+      font-size: 13px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .detail-section-title {
+      margin: 20px 0 8px;
+      font-size: 18px;
+      color: #202124;
+    }
+
+    .detail-text {
+      color: #3c4043;
+      font-size: 15px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      word-break: keep-all;
+    }
+
+    .detail-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    .detail-btn {
+      border: 1px solid #dadce0;
+      background: #ffffff;
+      color: #3c4043;
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .detail-btn.primary {
+      background: #1a73e8;
+      color: #ffffff;
+      border-color: #1a73e8;
+    }
+
+    .detail-btn:hover {
+      background: #f1f3f4;
+    }
+
+    .detail-btn.primary:hover {
+      background: #1765cc;
+    }
+
+    @media (max-width: 640px) {
+      .detail-title {
+        font-size: 26px;
+      }
+
+      .detail-content {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="topbar-right">
+        <button class="top-btn" onclick="location.href='/'">메인으로</button>
+        <button class="top-btn" onclick="location.href='/promo/request'">홍보 요청</button>
+        {% if current_user and current_user["role"] == "admin" %}
+          <button class="top-btn" onclick="location.href='/admin'">관리자</button>
+        {% endif %}
+      </div>
+    </header>
+
+    <main class="detail-main">
+      <article class="detail-card">
+        {% if promo["image_path"] %}
+          <img class="detail-image" src="{{ promo['image_path'] }}" alt="홍보물 이미지">
+        {% endif %}
+
+        <div class="detail-content">
+          <div class="detail-badge">광글 홍보</div>
+          <h1 class="detail-title">{{ promo["promo_what"] }}</h1>
+
+          <div class="detail-meta">
+            요청자: {{ promo["requester_name"] }}
+            · 공개 상태: {{ promo["status"] }}
+            · 등록일: {{ promo["created_at"][:10] }}
+          </div>
+
+          <h2 class="detail-section-title">홍보 사유</h2>
+          <div class="detail-text">{{ promo["promo_reason"] }}</div>
+
+          <div class="detail-actions">
+            <button class="detail-btn primary" onclick="location.href='/'">메인으로 돌아가기</button>
+            <button class="detail-btn" onclick="location.href='/promo/request'">나도 홍보 요청하기</button>
+          </div>
+        </div>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

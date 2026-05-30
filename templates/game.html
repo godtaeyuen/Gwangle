@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>광글 미니게임</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <style>
+    body {
+      background: #ffffff;
+    }
+
+    .game-page-main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .game-hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .game-title {
+      margin: 0 0 8px 0;
+      font-size: 32px;
+      color: #202124;
+    }
+
+    .game-desc {
+      margin: 0;
+      font-size: 14px;
+      color: #5f6368;
+      line-height: 1.6;
+    }
+
+    .game-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .game-tab {
+      border: 1px solid #dadce0;
+      background: #ffffff;
+      color: #3c4043;
+      border-radius: 999px;
+      padding: 10px 15px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .game-tab.active {
+      background: #1a73e8;
+      color: #ffffff;
+      border-color: #1a73e8;
+    }
+
+    .game-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .game-card {
+      border: 1px solid #dadce0;
+      border-radius: 24px;
+      background: #ffffff;
+      box-shadow: 0 2px 12px rgba(60, 64, 67, 0.08);
+      overflow: hidden;
+    }
+
+    .game-top-panel {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      padding: 14px;
+      border-bottom: 1px solid #eceff1;
+      background: #f8fafd;
+    }
+
+    .game-stat {
+      border: 1px solid #e8eaed;
+      border-radius: 16px;
+      background: #ffffff;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .game-stat-label {
+      font-size: 12px;
+      color: #5f6368;
+      margin-bottom: 6px;
+    }
+
+    .game-stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: #202124;
+    }
+
+    .game-arena {
+      height: 520px;
+      position: relative;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(66, 133, 244, 0.12), transparent 28%),
+        radial-gradient(circle at 80% 30%, rgba(251, 188, 5, 0.18), transparent 26%),
+        radial-gradient(circle at 50% 80%, rgba(52, 168, 83, 0.13), transparent 25%),
+        #ffffff;
+      overflow: hidden;
+      user-select: none;
+      cursor: crosshair;
+    }
+
+    .arena-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.9);
+      z-index: 30;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .overlay-box {
+      max-width: 480px;
+    }
+
+    .overlay-title {
+      font-size: 30px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      color: #202124;
+    }
+
+    .overlay-desc {
+      font-size: 14px;
+      color: #5f6368;
+      line-height: 1.65;
+      margin-bottom: 18px;
+    }
+
+    .start-btn {
+      height: 48px;
+      border: none;
+      border-radius: 999px;
+      background: #1a73e8;
+      color: #ffffff;
+      padding: 0 22px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .start-btn:hover {
+      background: #1765cc;
+    }
+
+    .start-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .target {
+      position: absolute;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-weight: 900;
+      box-shadow: 0 8px 24px rgba(60, 64, 67, 0.22);
+      animation: pop 0.16s ease-out;
+      z-index: 5;
+    }
+
+    .target.normal {
+      background: linear-gradient(135deg, #4285f4, #1a73e8);
+    }
+
+    .target.bonus {
+      background: linear-gradient(135deg, #fbbc05, #f29900);
+      color: #202124;
+    }
+
+    .target.trap {
+      background: linear-gradient(135deg, #ea4335, #c5221f);
+    }
+
+    .target.small {
+      width: 42px;
+      height: 42px;
+      font-size: 14px;
+    }
+
+    .target.medium {
+      width: 56px;
+      height: 56px;
+      font-size: 16px;
+    }
+
+    .target.large {
+      width: 70px;
+      height: 70px;
+      font-size: 18px;
+    }
+
+    @keyframes pop {
+      from {
+        transform: translate(-50%, -50%) scale(0.4);
+        opacity: 0;
+      }
+      to {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .floating-score {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+      font-weight: 900;
+      pointer-events: none;
+      animation: floatUp 0.75s ease-out forwards;
+      z-index: 10;
+    }
+
+    .floating-score.good {
+      color: #1a73e8;
+    }
+
+    .floating-score.bonus {
+      color: #f29900;
+    }
+
+    .floating-score.bad {
+      color: #c5221f;
+    }
+
+    @keyframes floatUp {
+      from {
+        opacity: 1;
+        transform: translate(-50%, -50%) translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translate(-50%, -50%) translateY(-36px);
+      }
+    }
+
+    #dodgeCanvas {
+      width: 100%;
+      height: 100%;
+      display: none;
+    }
+
+    .typing-area {
+      height: 100%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .typing-box {
+      width: 100%;
+      max-width: 520px;
+      text-align: center;
+    }
+
+    .typing-word {
+      font-size: 42px;
+      font-weight: 900;
+      color: #1a73e8;
+      margin-bottom: 20px;
+      word-break: keep-all;
+    }
+
+    .typing-input {
+      width: 100%;
+      height: 54px;
+      border: 1px solid #dadce0;
+      border-radius: 999px;
+      padding: 0 20px;
+      font-size: 18px;
+      outline: none;
+      text-align: center;
+    }
+
+    .typing-input:focus {
+      border-color: #1a73e8;
+    }
+
+    .typing-hint {
+      margin-top: 14px;
+      font-size: 14px;
+      color: #5f6368;
+      line-height: 1.5;
+    }
+
+    .leaderboard-card {
+      border: 1px solid #dadce0;
+      border-radius: 24px;
+      background: #ffffff;
+      box-shadow: 0 2px 12px rgba(60, 64, 67, 0.08);
+      padding: 18px;
+      min-height: 650px;
+    }
+
+    .leaderboard-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      gap: 10px;
+    }
+
+    .leaderboard-title {
+      margin: 0;
+      font-size: 20px;
+      color: #202124;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #e6f4ea;
+      color: #137333;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34a853;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.35;
+      }
+    }
+
+    .rank-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .rank-item {
+      border: 1px solid #eceff1;
+      border-radius: 16px;
+      padding: 12px;
+      background: #fafafa;
+      display: grid;
+      grid-template-columns: 42px 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .rank-number {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #e8f0fe;
+      color: #1a73e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+    }
+
+    .rank-item:nth-child(1) .rank-number {
+      background: #fef7e0;
+      color: #f29900;
+    }
+
+    .rank-item:nth-child(2) .rank-number {
+      background: #f1f3f4;
+      color: #5f6368;
+    }
+
+    .rank-item:nth-child(3) .rank-number {
+      background: #fce8e6;
+      color: #c5221f;
+    }
+
+    .rank-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: #202124;
+      margin-bottom: 3px;
+    }
+
+    .rank-sub {
+      font-size: 12px;
+      color: #5f6368;
+    }
+
+    .rank-score {
+      font-size: 18px;
+      font-weight: 900;
+      color: #1a73e8;
+      text-align: right;
+    }
+
+    .rank-meta {
+      font-size: 11px;
+      color: #5f6368;
+      margin-top: 3px;
+      text-align: right;
+    }
+
+    .game-help {
+      margin-top: 14px;
+      border-radius: 18px;
+      background: #f8f9fa;
+      padding: 14px;
+      font-size: 13px;
+      color: #5f6368;
+      line-height: 1.6;
+    }
+
+    .result-box {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 18px;
+      background: #e8f0fe;
+      color: #174ea6;
+      font-size: 14px;
+      line-height: 1.6;
+      display: none;
+    }
+
+    @media (max-width: 980px) {
+      .game-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .leaderboard-card {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .game-top-panel {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .game-arena {
+        height: 440px;
+      }
+
+      .game-title {
+        font-size: 26px;
+      }
+
+      .typing-word {
+        font-size: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="topbar-right">
+        <button class="top-btn" onclick="location.href='/'">메인으로</button>
+        {% if current_user %}
+          <span class="user-badge">{{ current_user["student_name"] }} ({{ current_user["student_id"] }})</span>
+          <button class="top-btn" onclick="location.href='/logout'">로그아웃</button>
+        {% else %}
+          <button class="top-btn" onclick="location.href='/login'">로그인</button>
+          <button class="top-btn" onclick="location.href='/signup'">회원가입</button>
+        {% endif %}
+      </div>
+    </header>
+
+    <main class="game-page-main">
+      <section class="game-hero">
+        <div>
+          <h1 class="game-title">광글 미니게임</h1>
+          <p class="game-desc">
+            게임을 선택하고 친구들과 실시간 랭킹을 겨뤄보세요.
+            로그인하면 점수가 학번과 이름으로 저장됩니다.
+          </p>
+        </div>
+      </section>
+
+      <div class="game-tabs">
+        <button class="game-tab active" data-game="reaction">반응속도 챌린지</button>
+        <button class="game-tab" data-game="dodge">닷지 서바이벌</button>
+        <button class="game-tab" data-game="typing">스피드 단어 챌린지</button>
+      </div>
+
+      <section class="game-layout">
+        <div class="game-card">
+          <div class="game-top-panel">
+            <div class="game-stat">
+              <div class="game-stat-label">점수</div>
+              <div id="scoreValue" class="game-stat-value">0</div>
+            </div>
+
+            <div class="game-stat">
+              <div class="game-stat-label">남은 시간</div>
+              <div id="timeValue" class="game-stat-value">0</div>
+            </div>
+
+            <div class="game-stat">
+              <div class="game-stat-label">콤보</div>
+              <div id="comboValue" class="game-stat-value">0</div>
+            </div>
+
+            <div class="game-stat">
+              <div class="game-stat-label">정확도</div>
+              <div id="accuracyValue" class="game-stat-value">0%</div>
+            </div>
+          </div>
+
+          <div id="gameArena" class="game-arena">
+            <canvas id="dodgeCanvas"></canvas>
+
+            <div id="typingArea" class="typing-area">
+              <div class="typing-box">
+                <div id="typingWord" class="typing-word">시작</div>
+                <input id="typingInput" class="typing-input" placeholder="단어를 입력하고 Enter" autocomplete="off">
+                <div class="typing-hint">정확히 입력하고 Enter를 누르면 점수가 올라갑니다.</div>
+              </div>
+            </div>
+
+            <div id="arenaOverlay" class="arena-overlay"></div>
+          </div>
+        </div>
+
+        <aside class="leaderboard-card">
+          <div class="leaderboard-head">
+            <h2 id="leaderboardTitle" class="leaderboard-title">반응속도 랭킹</h2>
+            <div class="live-badge">
+              <span class="live-dot"></span>
+              LIVE
+            </div>
+          </div>
+
+          <div id="rankList" class="rank-list">
+            <div class="empty-message">랭킹 불러오는 중...</div>
+          </div>
+
+          <div id="resultBox" class="result-box"></div>
+
+          <div id="gameHelp" class="game-help">
+            파란 타겟은 기본 점수, 노란 타겟은 보너스, 빨간 타겟은 감점입니다.
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const GAME_INFO = {
+      reaction: {
+        title: "반응속도 챌린지",
+        rankTitle: "반응속도 랭킹",
+        duration: 30,
+        desc: "30초 동안 나타나는 타겟을 클릭하세요.<br>파란 타겟은 기본 점수, 노란 타겟은 보너스, 빨간 타겟은 감점입니다.",
+        help: "빠르게 타겟을 눌러 콤보를 쌓으세요. 빈 곳을 누르면 콤보가 끊깁니다."
+      },
+      dodge: {
+        title: "닷지 서바이벌",
+        rankTitle: "닷지 랭킹",
+        duration: 45,
+        desc: "빨간 장애물에 닿으면 즉시 게임이 끝납니다.<br>노란 별을 먹으면 점수가 올라갑니다. 방향키 또는 WASD로 이동합니다.",
+        help: "장애물이 많이 떨어집니다. PC에서는 방향키/WASD로 움직이고, 모바일에서는 터치로 움직입니다."
+      },
+      typing: {
+        title: "스피드 단어 챌린지",
+        rankTitle: "스피드 단어 랭킹",
+        duration: 45,
+        desc: "45초 동안 한국어 랜덤 단어를 빠르게 입력하세요.<br>정확히 입력하고 Enter를 누르면 점수가 올라갑니다.",
+        help: "한국어 단어만 등장합니다. 정확한 입력과 연속 성공 콤보가 중요합니다."
+      }
+    };
+
+    const WORDS = [
+      "바람", "구름", "노을", "바다", "숲길", "달빛", "햇살", "고래",
+      "별빛", "사과", "나무", "호수", "여행", "모래", "하늘", "비밀",
+      "미소", "열정", "속도", "도전", "기록", "승리", "기회", "집중",
+      "반짝임", "무지개", "나침반", "풍선", "기차", "라디오", "초콜릿", "종이비행기",
+      "소나기", "민들레", "나비", "은하수", "고양이", "강아지", "수박", "포도",
+      "바위", "동굴", "폭포", "단풍", "산책", "자전거", "운동화", "시계",
+      "전화", "창문", "열쇠", "지도", "해변", "파도", "바람개비", "유리구슬",
+      "노래", "그림자", "새벽", "저녁", "향기", "기쁨", "평화", "웃음",
+      "얼음", "불꽃", "정원", "우산", "별자리", "장미", "호랑이", "사막",
+      "물결", "낙엽", "초승달", "분수", "비행기", "풍경", "보물", "모험"
+    ];
+
+    const arena = document.getElementById("gameArena");
+    const overlay = document.getElementById("arenaOverlay");
+
+    const scoreValue = document.getElementById("scoreValue");
+    const timeValue = document.getElementById("timeValue");
+    const comboValue = document.getElementById("comboValue");
+    const accuracyValue = document.getElementById("accuracyValue");
+    const rankList = document.getElementById("rankList");
+    const resultBox = document.getElementById("resultBox");
+    const leaderboardTitle = document.getElementById("leaderboardTitle");
+    const gameHelp = document.getElementById("gameHelp");
+
+    const dodgeCanvas = document.getElementById("dodgeCanvas");
+    const dodgeCtx = dodgeCanvas.getContext("2d");
+
+    const typingArea = document.getElementById("typingArea");
+    const typingWord = document.getElementById("typingWord");
+    const typingInput = document.getElementById("typingInput");
+
+    let selectedGame = "reaction";
+    let gameId = null;
+    let playing = false;
+    let score = 0;
+    let hits = 0;
+    let misses = 0;
+    let combo = 0;
+    let comboMax = 0;
+    let remaining = GAME_INFO[selectedGame].duration;
+    let startTime = 0;
+
+    let gameTimer = null;
+    let targetTimer = null;
+    let currentTarget = null;
+
+    let dodgeAnimation = null;
+    let dodgeObjects = [];
+    let player = { x: 250, y: 250, size: 18 };
+    let keys = {};
+    let lastDodgeTime = 0;
+    let lastSpawnTime = 0;
+
+    let currentWord = "";
+
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    }
+
+    function playTone(freq, duration, volume, type) {
+      if (!audioCtx) return;
+
+      const oscillator = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const now = audioCtx.currentTime;
+
+      oscillator.type = type || "sine";
+      oscillator.frequency.setValueAtTime(freq, now);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(volume, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      oscillator.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      oscillator.start(now);
+      oscillator.stop(now + duration + 0.02);
+    }
+
+    function playReactionSound(type) {
+      initAudio();
+
+      if (type === "bonus") {
+        playTone(720, 0.07, 0.035, "sine");
+        setTimeout(() => playTone(960, 0.07, 0.03, "sine"), 55);
+      } else if (type === "trap") {
+        playTone(180, 0.12, 0.04, "sawtooth");
+      } else {
+        playTone(520, 0.055, 0.03, "square");
+      }
+    }
+
+    function playCoinSound() {
+      initAudio();
+      playTone(760, 0.06, 0.035, "sine");
+      setTimeout(() => playTone(1040, 0.08, 0.03, "sine"), 55);
+    }
+
+    function playCrashSound() {
+      initAudio();
+      playTone(130, 0.18, 0.045, "sawtooth");
+    }
+
+    function playTypeSound() {
+      initAudio();
+      playTone(880, 0.035, 0.018, "square");
+    }
+
+    function playCorrectSound() {
+      initAudio();
+      playTone(660, 0.06, 0.028, "sine");
+      setTimeout(() => playTone(880, 0.06, 0.025, "sine"), 45);
+    }
+
+    function playWrongSound() {
+      initAudio();
+      playTone(220, 0.1, 0.035, "sawtooth");
+    }
+
+    function resetStats() {
+      score = 0;
+      hits = 0;
+      misses = 0;
+      combo = 0;
+      comboMax = 0;
+      remaining = GAME_INFO[selectedGame].duration;
+      updateStats();
+    }
+
+    function updateStats() {
+      const total = hits + misses;
+      const accuracy = total === 0 ? 0 : Math.round((hits / total) * 100);
+
+      scoreValue.textContent = Math.floor(score);
+      timeValue.textContent = remaining;
+      comboValue.textContent = combo;
+      accuracyValue.textContent = `${accuracy}%`;
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function clearTarget() {
+      if (currentTarget) {
+        currentTarget.remove();
+        currentTarget = null;
+      }
+    }
+
+    function clearGameVisuals() {
+      clearTarget();
+      clearTimeout(targetTimer);
+      cancelAnimationFrame(dodgeAnimation);
+      dodgeCanvas.style.display = "none";
+      typingArea.style.display = "none";
+
+      document.querySelectorAll(".floating-score").forEach(el => el.remove());
+      document.querySelectorAll(".target").forEach(el => el.remove());
+    }
+
+    function showFloatingScore(x, y, text, type) {
+      const div = document.createElement("div");
+      div.className = `floating-score ${type}`;
+      div.textContent = text;
+      div.style.left = `${x}px`;
+      div.style.top = `${y}px`;
+      arena.appendChild(div);
+
+      setTimeout(() => {
+        div.remove();
+      }, 800);
+    }
+
+    function renderStartOverlay() {
+      overlay.style.display = "flex";
+      overlay.innerHTML = `
+        <div class="overlay-box">
+          <div class="overlay-title">${GAME_INFO[selectedGame].title}</div>
+          <div class="overlay-desc">${GAME_INFO[selectedGame].desc}</div>
+          <button class="start-btn" id="startGameBtn">게임 시작</button>
+        </div>
+      `;
+
+      document.getElementById("startGameBtn").addEventListener("click", startGame);
+    }
+
+    function setGame(gameType) {
+      if (playing) return;
+
+      selectedGame = gameType;
+      clearGameVisuals();
+      resetStats();
+
+      document.querySelectorAll(".game-tab").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.game === selectedGame);
+      });
+
+      leaderboardTitle.textContent = GAME_INFO[selectedGame].rankTitle;
+      gameHelp.textContent = GAME_INFO[selectedGame].help;
+      resultBox.style.display = "none";
+
+      renderStartOverlay();
+      loadLeaderboard();
+    }
+
+    document.querySelectorAll(".game-tab").forEach(btn => {
+      btn.addEventListener("click", () => setGame(btn.dataset.game));
+    });
+
+    async function startGame() {
+      initAudio();
+
+      const startButton = document.getElementById("startGameBtn");
+      if (startButton) {
+        startButton.disabled = true;
+        startButton.textContent = "시작 중...";
+      }
+
+      try {
+        const res = await fetch("/api/game/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gameType: selectedGame })
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          alert(data.message || "게임을 시작할 수 없습니다. 로그인 상태를 확인해주세요.");
+          renderStartOverlay();
+          return;
+        }
+
+        gameId = data.game_id;
+        playing = true;
+        startTime = Date.now();
+        remaining = data.duration_seconds || GAME_INFO[selectedGame].duration;
+        resetStats();
+
+        overlay.style.display = "none";
+        resultBox.style.display = "none";
+        clearGameVisuals();
+
+        if (selectedGame === "reaction") {
+          startReactionGame();
+        } else if (selectedGame === "dodge") {
+          startDodgeGame();
+        } else if (selectedGame === "typing") {
+          startTypingGame();
+        }
+
+        gameTimer = setInterval(() => {
+          remaining--;
+          updateStats();
+
+          if (remaining <= 0) {
+            endGame("시간 종료!");
+          }
+        }, 1000);
+
+      } catch (error) {
+        alert("게임 시작 중 오류가 발생했습니다.");
+        renderStartOverlay();
+      }
+    }
+
+    function startReactionGame() {
+      arena.style.cursor = "crosshair";
+      spawnTarget();
+    }
+
+    function spawnTarget() {
+      if (!playing || selectedGame !== "reaction") return;
+
+      clearTarget();
+
+      const rect = arena.getBoundingClientRect();
+      const roll = Math.random();
+
+      let type = "normal";
+      let label = "+";
+      let sizeClass = "medium";
+
+      if (roll > 0.84) {
+        type = "bonus";
+        label = "★";
+        sizeClass = "small";
+      } else if (roll < 0.16) {
+        type = "trap";
+        label = "!";
+        sizeClass = "large";
+      } else {
+        type = "normal";
+        label = "+";
+        sizeClass = Math.random() > 0.55 ? "small" : "medium";
+      }
+
+      const padding = 60;
+      const x = randomInt(padding, Math.max(padding, rect.width - padding));
+      const y = randomInt(padding, Math.max(padding, rect.height - padding));
+
+      const target = document.createElement("div");
+      target.className = `target ${type} ${sizeClass}`;
+      target.textContent = label;
+      target.style.left = `${x}px`;
+      target.style.top = `${y}px`;
+
+      target.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!playing) return;
+
+        playReactionSound(type);
+        hits++;
+
+        let addScore = 0;
+        let floatType = "good";
+
+        if (type === "normal") {
+          combo++;
+          addScore = 10 + Math.min(combo, 10);
+          floatType = "good";
+        } else if (type === "bonus") {
+          combo++;
+          addScore = 30 + Math.min(combo * 2, 20);
+          floatType = "bonus";
+        } else {
+          combo = 0;
+          addScore = -20;
+          floatType = "bad";
+        }
+
+        comboMax = Math.max(comboMax, combo);
+        score = Math.max(0, score + addScore);
+
+        showFloatingScore(x, y, addScore >= 0 ? `+${addScore}` : `${addScore}`, floatType);
+        updateStats();
+        spawnTarget();
+      });
+
+      arena.appendChild(target);
+      currentTarget = target;
+
+      const nextDelay = randomInt(650, 1100);
+      targetTimer = setTimeout(() => {
+        if (!playing || selectedGame !== "reaction") return;
+
+        if (currentTarget === target) {
+          clearTarget();
+          misses++;
+          combo = 0;
+          updateStats();
+          spawnTarget();
+        }
+      }, nextDelay);
+    }
+
+    arena.addEventListener("click", (e) => {
+      if (!playing || selectedGame !== "reaction") return;
+      if (e.target.classList.contains("target")) return;
+
+      misses++;
+      combo = 0;
+      updateStats();
+
+      const rect = arena.getBoundingClientRect();
+      showFloatingScore(e.clientX - rect.left, e.clientY - rect.top, "MISS", "bad");
+    });
+
+    function startDodgeGame() {
+      arena.style.cursor = "default";
+      dodgeCanvas.style.display = "block";
+
+      const rect = arena.getBoundingClientRect();
+      dodgeCanvas.width = rect.width;
+      dodgeCanvas.height = rect.height;
+
+      player.x = dodgeCanvas.width / 2;
+      player.y = dodgeCanvas.height - 80;
+      dodgeObjects = [];
+      keys = {};
+      lastDodgeTime = performance.now();
+      lastSpawnTime = performance.now();
+
+      dodgeLoop(lastDodgeTime);
+    }
+
+    function spawnDodgeObject() {
+      const isCoin = Math.random() > 0.90;
+      const isFast = Math.random() > 0.72;
+
+      dodgeObjects.push({
+        x: randomInt(24, dodgeCanvas.width - 24),
+        y: -30,
+        r: isCoin ? 13 : randomInt(15, 26),
+        speed: isCoin ? randomInt(160, 220) : isFast ? randomInt(320, 410) : randomInt(230, 330),
+        type: isCoin ? "coin" : "danger"
+      });
+    }
+
+    function dodgeLoop(now) {
+      if (!playing || selectedGame !== "dodge") return;
+
+      const dt = Math.min((now - lastDodgeTime) / 1000, 0.05);
+      lastDodgeTime = now;
+
+      dodgeCtx.clearRect(0, 0, dodgeCanvas.width, dodgeCanvas.height);
+
+      const elapsedSeconds = (Date.now() - startTime) / 1000;
+      const playerSpeed = 410;
+
+      /*
+        장애물 많이 증가:
+        - 초반부터 더 자주 등장
+        - 중반 이후 2개씩 나올 확률 증가
+        - 후반에는 3개 이상도 자주 등장
+      */
+      const currentSpawnInterval = Math.max(210, 430 - elapsedSeconds * 5.2);
+
+      if (keys["ArrowLeft"] || keys["a"] || keys["A"]) player.x -= playerSpeed * dt;
+      if (keys["ArrowRight"] || keys["d"] || keys["D"]) player.x += playerSpeed * dt;
+      if (keys["ArrowUp"] || keys["w"] || keys["W"]) player.y -= playerSpeed * dt;
+      if (keys["ArrowDown"] || keys["s"] || keys["S"]) player.y += playerSpeed * dt;
+
+      player.x = Math.max(player.size, Math.min(dodgeCanvas.width - player.size, player.x));
+      player.y = Math.max(player.size, Math.min(dodgeCanvas.height - player.size, player.y));
+
+      if (now - lastSpawnTime > currentSpawnInterval) {
+        spawnDodgeObject();
+
+        if (elapsedSeconds > 5 && Math.random() > 0.55) {
+          spawnDodgeObject();
+        }
+
+        if (elapsedSeconds > 15 && Math.random() > 0.45) {
+          spawnDodgeObject();
+        }
+
+        if (elapsedSeconds > 28 && Math.random() > 0.35) {
+          spawnDodgeObject();
+        }
+
+        if (elapsedSeconds > 38 && Math.random() > 0.50) {
+          spawnDodgeObject();
+        }
+
+        lastSpawnTime = now;
+      }
+
+      score += dt * 18;
+
+      dodgeObjects.forEach(obj => {
+        obj.y += obj.speed * dt;
+      });
+
+      dodgeObjects = dodgeObjects.filter(obj => {
+        const dx = obj.x - player.x;
+        const dy = obj.y - player.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < obj.r + player.size) {
+          if (obj.type === "coin") {
+            playCoinSound();
+            hits++;
+            combo++;
+            comboMax = Math.max(comboMax, combo);
+            score += 55 + Math.min(combo * 6, 60);
+            updateStats();
+            return false;
+          }
+
+          playCrashSound();
+          misses++;
+          combo = 0;
+          updateStats();
+          endGame("장애물에 닿았습니다!");
+          return false;
+        }
+
+        return obj.y < dodgeCanvas.height + 40;
+      });
+
+      if (!playing || selectedGame !== "dodge") return;
+
+      dodgeCtx.fillStyle = "#1a73e8";
+      dodgeCtx.beginPath();
+      dodgeCtx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+      dodgeCtx.fill();
+
+      dodgeCtx.fillStyle = "#ffffff";
+      dodgeCtx.beginPath();
+      dodgeCtx.arc(player.x - 6, player.y - 5, 3, 0, Math.PI * 2);
+      dodgeCtx.arc(player.x + 6, player.y - 5, 3, 0, Math.PI * 2);
+      dodgeCtx.fill();
+
+      dodgeObjects.forEach(obj => {
+        dodgeCtx.beginPath();
+        dodgeCtx.arc(obj.x, obj.y, obj.r, 0, Math.PI * 2);
+
+        if (obj.type === "coin") {
+          dodgeCtx.fillStyle = "#fbbc05";
+        } else {
+          dodgeCtx.fillStyle = "#ea4335";
+        }
+
+        dodgeCtx.fill();
+      });
+
+      updateStats();
+      dodgeAnimation = requestAnimationFrame(dodgeLoop);
+    }
+
+    window.addEventListener("keydown", (e) => {
+      keys[e.key] = true;
+
+      if (selectedGame === "dodge" && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+        e.preventDefault();
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      keys[e.key] = false;
+    });
+
+    arena.addEventListener("touchmove", (e) => {
+      if (!playing || selectedGame !== "dodge") return;
+
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = dodgeCanvas.getBoundingClientRect();
+
+      player.x = touch.clientX - rect.left;
+      player.y = touch.clientY - rect.top;
+    }, { passive: false });
+
+    function startTypingGame() {
+      arena.style.cursor = "default";
+      typingArea.style.display = "flex";
+      typingInput.value = "";
+      nextWord();
+      setTimeout(() => typingInput.focus(), 100);
+    }
+
+    function nextWord() {
+      currentWord = WORDS[randomInt(0, WORDS.length - 1)];
+      typingWord.textContent = currentWord;
+    }
+
+    typingInput.addEventListener("keydown", (e) => {
+      if (!playing || selectedGame !== "typing") return;
+
+      if (
+        e.key.length === 1 ||
+        e.key === "Backspace" ||
+        e.key === "Delete" ||
+        e.key === " "
+      ) {
+        playTypeSound();
+      }
+
+      if (e.key === "Enter") {
+        const typed = typingInput.value.trim();
+
+        if (typed === currentWord) {
+          playCorrectSound();
+          hits++;
+          combo++;
+          comboMax = Math.max(comboMax, combo);
+          score += currentWord.length * 8 + Math.min(combo * 4, 40);
+        } else {
+          playWrongSound();
+          misses++;
+          combo = 0;
+          score = Math.max(0, score - 10);
+        }
+
+        typingInput.value = "";
+        nextWord();
+        updateStats();
+      }
+    });
+
+    async function endGame(reasonText) {
+      if (!playing) return;
+
+      playing = false;
+      clearInterval(gameTimer);
+      clearTimeout(targetTimer);
+      cancelAnimationFrame(dodgeAnimation);
+      clearTarget();
+
+      arena.style.cursor = "default";
+
+      const durationMs = Date.now() - startTime;
+      const total = hits + misses;
+      const accuracy = total === 0 ? 0 : (hits / total) * 100;
+      const reason = reasonText || "게임 종료!";
+
+      overlay.style.display = "flex";
+      overlay.innerHTML = `
+        <div class="overlay-box">
+          <div class="overlay-title">${reason}</div>
+          <div class="overlay-desc">
+            최종 점수: <strong>${Math.floor(score)}점</strong><br>
+            성공: ${hits}회 / 실패: ${misses}회 / 최고 콤보: ${comboMax}<br>
+            점수를 저장하고 랭킹을 갱신합니다.
+          </div>
+          <button id="restartBtn" class="start-btn">다시 도전</button>
+        </div>
+      `;
+
+      document.getElementById("restartBtn").addEventListener("click", () => {
+        renderStartOverlay();
+      });
+
+      try {
+        const res = await fetch("/api/game/submit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            gameId,
+            gameType: selectedGame,
+            score: Math.floor(score),
+            hits,
+            misses,
+            comboMax,
+            accuracy,
+            durationMs
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          resultBox.style.display = "block";
+          resultBox.textContent = "점수가 저장되었습니다. 실시간 랭킹에 반영되었습니다.";
+          renderLeaderboard(data.leaderboard || []);
+        } else {
+          resultBox.style.display = "block";
+          resultBox.textContent = data.message || "점수를 저장하지 못했습니다.";
+        }
+      } catch (error) {
+        resultBox.style.display = "block";
+        resultBox.textContent = "점수 제출 중 오류가 발생했습니다.";
+      }
+    }
+
+    function renderLeaderboard(list) {
+      if (!list || list.length === 0) {
+        rankList.innerHTML = `<div class="empty-message">아직 랭킹이 없습니다.</div>`;
+        return;
+      }
+
+      rankList.innerHTML = list.map(item => `
+        <div class="rank-item">
+          <div class="rank-number">${item.rank}</div>
+          <div>
+            <div class="rank-name">${item.student_name}</div>
+            <div class="rank-sub">${item.student_id} · 최고 콤보 ${item.combo_max} · 정확도 ${item.accuracy}%</div>
+          </div>
+          <div>
+            <div class="rank-score">${item.score}</div>
+            <div class="rank-meta">점</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function loadLeaderboard() {
+      try {
+        const res = await fetch(`/api/game/leaderboard?gameType=${selectedGame}&limit=10`);
+        const data = await res.json();
+
+        if (data.success) {
+          renderLeaderboard(data.leaderboard);
+        }
+      } catch (error) {
+        rankList.innerHTML = `<div class="empty-message">랭킹을 불러오지 못했습니다.</div>`;
+      }
+    }
+
+    resetStats();
+    renderStartOverlay();
+    loadLeaderboard();
+    setInterval(loadLeaderboard, 2000);
+  </script>
+</body>
+</html>

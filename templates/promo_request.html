@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>광글 홍보 신청</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <style>
+    body {
+      background: #ffffff;
+      color: #202124;
+    }
+
+    .promo-main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 36px 18px 56px;
+    }
+
+    .promo-card {
+      border: 1px solid #dadce0;
+      border-radius: 30px;
+      padding: 30px;
+      background: #ffffff;
+      box-shadow: 0 3px 18px rgba(60, 64, 67, 0.12);
+    }
+
+    .promo-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #e8f0fe;
+      color: #174ea6;
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 14px;
+    }
+
+    .promo-title {
+      margin: 0 0 10px;
+      font-size: 34px;
+      color: #202124;
+      letter-spacing: -0.8px;
+    }
+
+    .promo-desc {
+      margin: 0 0 22px;
+      color: #5f6368;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .promo-info {
+      margin-bottom: 22px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: #f8fafd;
+      border: 1px solid #eceff1;
+      color: #5f6368;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .promo-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .promo-label {
+      font-size: 13px;
+      font-weight: 900;
+      color: #3c4043;
+    }
+
+    .required {
+      color: #d93025;
+      margin-left: 3px;
+    }
+
+    .promo-input,
+    .promo-textarea {
+      width: 100%;
+      border: 1px solid #dadce0;
+      border-radius: 16px;
+      padding: 13px 14px;
+      font-size: 15px;
+      outline: none;
+      box-sizing: border-box;
+      background: #ffffff;
+      color: #202124;
+    }
+
+    .promo-input {
+      height: 50px;
+    }
+
+    .promo-textarea {
+      min-height: 190px;
+      resize: vertical;
+      line-height: 1.65;
+    }
+
+    .promo-input:focus,
+    .promo-textarea:focus {
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12);
+    }
+
+    .file-box {
+      border: 1px dashed #c7cdd1;
+      border-radius: 20px;
+      padding: 18px;
+      background: #f8fafd;
+    }
+
+    .file-input {
+      width: 100%;
+      font-size: 14px;
+    }
+
+    .file-help {
+      margin-top: 9px;
+      color: #5f6368;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .preview-img {
+      display: none;
+      width: 100%;
+      max-height: 380px;
+      object-fit: contain;
+      border-radius: 18px;
+      margin-top: 14px;
+      border: 1px solid #eceff1;
+      background: #ffffff;
+    }
+
+    .count-hint {
+      text-align: right;
+      color: #5f6368;
+      font-size: 12px;
+      margin-top: -4px;
+    }
+
+    .promo-submit-btn {
+      height: 52px;
+      border: none;
+      border-radius: 999px;
+      background: #1a73e8;
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: 0.15s;
+    }
+
+    .promo-submit-btn:hover {
+      background: #1765cc;
+      transform: translateY(-1px);
+    }
+
+    .promo-submit-btn:disabled {
+      background: #dadce0;
+      color: #80868b;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .promo-links {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 14px;
+      flex-wrap: wrap;
+    }
+
+    .promo-links a {
+      color: #1a73e8;
+      text-decoration: none;
+      font-weight: 900;
+    }
+
+    .flash-wrap {
+      margin-bottom: 14px;
+    }
+
+    .flash-message {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #e8f0fe;
+      color: #174ea6;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 640px) {
+      .promo-main {
+        padding: 24px 12px 42px;
+      }
+
+      .promo-card {
+        padding: 22px;
+        border-radius: 24px;
+      }
+
+      .promo-title {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="topbar-right">
+        <button class="top-btn" onclick="location.href='/'">메인으로</button>
+
+        {% if current_user and current_user["role"] == "admin" %}
+          <button class="top-btn" onclick="location.href='/admin'">관리자</button>
+        {% endif %}
+
+        {% if current_user %}
+          <button class="top-btn" onclick="location.href='/logout'">로그아웃</button>
+        {% else %}
+          <button class="top-btn" onclick="location.href='/login'">로그인</button>
+        {% endif %}
+      </div>
+    </header>
+
+    <main class="promo-main">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="flash-wrap">
+            {% for message in messages %}
+              <div class="flash-message">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <section class="promo-card">
+        <div class="promo-badge">📢 광글 홍보 신청</div>
+
+        <h1 class="promo-title">홍보 신청</h1>
+
+        <p class="promo-desc">
+          광글 메인 화면 팝업에 띄우고 싶은 홍보물을 신청하는 페이지입니다.
+          신청한 내용은 관리자 검토 후 승인되면 메인 화면에 랜덤으로 표시됩니다.
+        </p>
+
+        <div class="promo-info">
+          <strong>입력 항목</strong><br>
+          1. 어떤 걸 홍보할 건지<br>
+          2. 홍보 사유<br>
+          3. 홍보물 이미지<br><br>
+          이미지는 <strong>5MB 이하</strong>의 png, jpg, jpeg, webp, gif 파일만 업로드할 수 있습니다.
+        </div>
+
+        <form class="promo-form" method="POST" action="/promo/request" enctype="multipart/form-data">
+          <div class="form-group">
+            <label class="promo-label" for="promoWhat">
+              어떤 걸 홍보할 건가요?<span class="required">*</span>
+            </label>
+            <input
+              id="promoWhat"
+              name="promoWhat"
+              class="promo-input"
+              type="text"
+              placeholder="예: 컴퓨터 동아리 체험 부스, 학급 행사, 캠페인"
+              maxlength="80"
+              required
+            >
+            <div id="whatCount" class="count-hint">0 / 80</div>
+          </div>
+
+          <div class="form-group">
+            <label class="promo-label" for="promoReason">
+              홍보 사유<span class="required">*</span>
+            </label>
+            <textarea
+              id="promoReason"
+              name="promoReason"
+              class="promo-textarea"
+              placeholder="왜 홍보가 필요한지, 누구에게 알리고 싶은지, 어떤 효과를 기대하는지 작성해주세요."
+              maxlength="1000"
+              required
+            ></textarea>
+            <div id="reasonCount" class="count-hint">0 / 1000</div>
+          </div>
+
+          <div class="form-group">
+            <label class="promo-label" for="promoImage">
+              홍보물 이미지<span class="required">*</span>
+            </label>
+
+            <div class="file-box">
+              <input
+                id="promoImage"
+                name="promoImage"
+                class="file-input"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                required
+              >
+
+              <div class="file-help">
+                권장: 가로형 이미지 또는 정사각형 이미지<br>
+                최대 용량: 5MB
+              </div>
+
+              <img id="previewImg" class="preview-img" alt="홍보물 미리보기">
+            </div>
+          </div>
+
+          <button id="submitBtn" class="promo-submit-btn" type="submit">
+            관리자에게 홍보 신청 보내기
+          </button>
+        </form>
+
+        <div class="promo-links">
+          <a href="/">메인으로 돌아가기</a>
+          <a href="/admin">관리자 페이지</a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const promoWhat = document.getElementById("promoWhat");
+    const promoReason = document.getElementById("promoReason");
+    const promoImage = document.getElementById("promoImage");
+
+    const whatCount = document.getElementById("whatCount");
+    const reasonCount = document.getElementById("reasonCount");
+    const previewImg = document.getElementById("previewImg");
+    const submitBtn = document.getElementById("submitBtn");
+
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
+    promoWhat.addEventListener("input", () => {
+      whatCount.textContent = `${promoWhat.value.length} / 80`;
+    });
+
+    promoReason.addEventListener("input", () => {
+      reasonCount.textContent = `${promoReason.value.length} / 1000`;
+    });
+
+    promoImage.addEventListener("change", () => {
+      const file = promoImage.files[0];
+
+      if (!file) {
+        previewImg.style.display = "none";
+        previewImg.src = "";
+        return;
+      }
+
+      if (file.size > MAX_IMAGE_SIZE) {
+        alert("홍보물 이미지는 5MB 이하만 업로드할 수 있습니다.");
+        promoImage.value = "";
+        previewImg.style.display = "none";
+        previewImg.src = "";
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        alert("이미지 파일만 업로드할 수 있습니다.");
+        promoImage.value = "";
+        previewImg.style.display = "none";
+        previewImg.src = "";
+        return;
+      }
+
+      const imageUrl = URL.createObjectURL(file);
+      previewImg.src = imageUrl;
+      previewImg.style.display = "block";
+    });
+
+    document.querySelector(".promo-form").addEventListener("submit", () => {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "홍보 신청을 보내는 중...";
+    });
+  </script>
+</body>
+</html>
